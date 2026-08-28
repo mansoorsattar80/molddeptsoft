@@ -195,7 +195,7 @@
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 sec timeout
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased to 8 seconds
 
             const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory?select=*`, {
                 headers: {
@@ -206,16 +206,14 @@
             });
             clearTimeout(timeoutId);
 
-            if (!response.ok) throw new Error('Cloud offline');
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             const invData = await response.json();
             
-            // Render cloud data
             renderInventory(invData);
             statusBadge.innerText = "✅ LIVE CLOUD SYNCED";
             statusBadge.className = "status-badge connected";
         } catch (err) {
-            // Fallback to Local Storage so app works smoothly offline/blocked
-            statusBadge.innerText = "⚠️ LOCAL MODE (OFFLINE)";
+            statusBadge.innerText = `⚠️ OFFLINE (${err.name === 'AbortError' ? 'Timeout' : err.message})`;
             statusBadge.className = "status-badge error";
             loadLocalData();
         }
