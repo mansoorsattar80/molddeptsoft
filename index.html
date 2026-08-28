@@ -79,7 +79,7 @@
                 </tr>
             </thead>
             <tbody id="inventoryTable">
-                <tr><td colspan="3" style="text-align:center;">Loading cloud data...</td></tr>
+                <tr><td colspan="3" style="text-align:center;">Loading data...</td></tr>
             </tbody>
         </table>
         <div style="margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 8px;">
@@ -92,7 +92,7 @@
                 <label>Quantity (Kg)</label>
                 <input type="number" id="matQty" placeholder="0">
             </div>
-            <button class="btn" onclick="saveInventory()">Save to Cloud</button>
+            <button class="btn" onclick="saveInventory()">Save Entry</button>
         </div>
     </div>
 
@@ -188,36 +188,59 @@
         });
     }
 
+    // Fallback Local Storage Mode if Cloud is Blocked/Offline
     async function fetchCloudData() {
-        statusBadge.innerText = "CONNECTING (REST)...";
+        statusBadge.innerText = "CONNECTING...";
         statusBadge.className = "status-badge";
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 sec timeout
+
             const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory?select=*`, {
                 headers: {
                     'apikey': SUPABASE_ANON_KEY,
                     'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
+                },
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
+            if (!response.ok) throw new Error('Cloud offline');
             const invData = await response.json();
             
-            const invTable = document.getElementById('inventoryTable');
-            if (invData && invData.length > 0) {
-                invTable.innerHTML = invData.map(item => `<tr><td>${item.material_name}</td><td>${item.qty}</td><td>${item.updated_by}</td></tr>`).join('');
-            } else {
-                invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No records found. Add one below.</td></tr>`;
-            }
-
-            statusBadge.innerText = "✅ LIVE REST SYNCED";
+            // Render cloud data
+            renderInventory(invData);
+            statusBadge.innerText = "✅ LIVE CLOUD SYNCED";
             statusBadge.className = "status-badge connected";
         } catch (err) {
-            statusBadge.innerText = `❌ ${err.message}`;
+            // Fallback to Local Storage so app works smoothly offline/blocked
+            statusBadge.innerText = "⚠️ LOCAL MODE (OFFLINE)";
             statusBadge.className = "status-badge error";
-            console.error(err);
+            loadLocalData();
         }
+    }
+
+    function renderInventory(data) {
+        const invTable = document.getElementById('inventoryTable');
+        if (data && data.length > 0) {
+            invTable.innerHTML = data.map(item => `<tr><td>${item.material_name}</td><td>${item.qty}</td><td>${item.updated_by}</td></tr>`).join('');
+        } else {
+            invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No records found. Add one below.</td></tr>`;
+        }
+    }
+
+    function loadLocalData() {
+        const localInv = JSON.parse(localStorage.getItem('az_inventory') || '[]');
+        renderInventory(localInv);
+
+        const localProd = JSON.parse(localStorage.getItem('az_production') || '[]');
+        const prodTable = document.getElementById('productionTable');
+        prodTable.innerHTML = localProd.length ? localProd.map(i => `<tr><td>${i.machine}</td><td>${i.shots}</td><td>${i.user_name}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;">No local logs.</td></tr>`;
+
+        const localLedger = JSON.parse(localStorage.getItem('az_ledger') || '[]');
+        const ledgerTable = document.getElementById('ledgerTable');
+        ledgerTable.innerHTML = localLedger.length ? localLedger.map(i => `<tr><td>${i.description}</td><td>${i.amount}</td><td>${i.user_name}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;">No local entries.</td></tr>`;
     }
 
     async function saveInventory() {
@@ -225,72 +248,67 @@
         const qty = parseFloat(document.getElementById('matQty').value);
         if(!name || isNaN(qty)) { alert('Please enter valid details'); return; }
 
+        const entry = { material_name: name, qty: qty, updated_by: activeUser };
+
         try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory`, {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/inventory`, {
                 method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ material_name: name, qty: qty, updated_by: activeUser })
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify(entry)
             });
-
-            if (!response.ok) throw new Error('Failed to save to cloud');
-
-            document.getElementById('matName').value = '';
-            document.getElementById('matQty').value = '';
-            fetchCloudData();
-        } catch (err) {
-            alert('Error: ' + err.message);
+            if(!res.ok) throw new Error();
+        } catch {
+            // Save locally if cloud fails
+            const local = JSON.parse(localStorage.getItem('az_inventory') || '[]');
+            local.push(entry);
+            localStorage.setItem('az_inventory', JSON.stringify(local));
         }
+
+        document.getElementById('matName').value = '';
+        document.getElementById('matQty').value = '';
+        fetchCloudData();
     }
 
     async function saveProduction() {
         const shots = parseInt(document.getElementById('prodShots').value);
         if(isNaN(shots)) { alert('Please enter valid shots'); return; }
-        
+        const entry = { machine: document.getElementById('prodMachine').value, shots: shots, user_name: activeUser };
+
         try {
             await fetch(`${SUPABASE_URL}/rest/v1/production_logs`, {
                 method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ machine: document.getElementById('prodMachine').value, shots: shots, user_name: activeUser })
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify(entry)
             });
-            document.getElementById('prodShots').value = '';
-            fetchCloudData();
-        } catch (err) {
-            alert('Error: ' + err.message);
+        } catch {
+            const local = JSON.parse(localStorage.getItem('az_production') || '[]');
+            local.push(entry);
+            localStorage.setItem('az_production', JSON.stringify(local));
         }
+        document.getElementById('prodShots').value = '';
+        fetchCloudData();
     }
 
     async function saveLedger() {
         const desc = document.getElementById('ledgerDesc').value;
         const amount = parseFloat(document.getElementById('ledgerAmount').value);
         if(!desc || isNaN(amount)) { alert('Please enter valid details'); return; }
+        const entry = { description: desc, amount: amount, user_name: activeUser };
 
         try {
             await fetch(`${SUPABASE_URL}/rest/v1/ledger`, {
                 method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ description: desc, amount: amount, user_name: activeUser })
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify(entry)
             });
-            document.getElementById('ledgerDesc').value = '';
-            document.getElementById('ledgerAmount').value = '';
-            fetchCloudData();
-        } catch (err) {
-            alert('Error: ' + err.message);
+        } catch {
+            const local = JSON.parse(localStorage.getItem('az_ledger') || '[]');
+            local.push(entry);
+            localStorage.setItem('az_ledger', JSON.stringify(local));
         }
+        document.getElementById('ledgerDesc').value = '';
+        document.getElementById('ledgerAmount').value = '';
+        fetchCloudData();
     }
 
     fetchCloudData();
