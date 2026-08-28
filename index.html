@@ -175,10 +175,16 @@
 </div>
 
 <script>
-    // Supabase Initialization
+    // Supabase Initialization safely wrapped
     const SUPABASE_URL = 'https://qnorrqaufbusfnwapllk.supabase.co';
     const SUPABASE_ANON_KEY = 'Sb_publishable_-Fjarq_4Qt4HTnDIvJ3M9w_p0nrHunt';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let supabase = null;
+    try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+        console.error("Supabase load error:", e);
+    }
 
     let activeUser = "MANAGER";
 
@@ -196,6 +202,12 @@
         statusBadge.innerText = "CONNECTING...";
         statusBadge.className = "status-badge";
 
+        if (!supabase) {
+            statusBadge.innerText = "❌ ERROR: SDK NOT LOADED";
+            statusBadge.className = "status-badge error";
+            return;
+        }
+
         try {
             // Fetch Inventory
             const { data: invData, error: invError } = await supabase.from('inventory').select('*');
@@ -205,7 +217,7 @@
             if (invData && invData.length > 0) {
                 invTable.innerHTML = invData.map(item => `<tr><td>${item.material_name}</td><td>${item.qty}</td><td>${item.updated_by}</td></tr>`).join('');
             } else {
-                invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No inventory records found.</td></tr>`;
+                invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No inventory records found. Use form below to add.</td></tr>`;
             }
 
             // Fetch Production Logs
@@ -233,7 +245,7 @@
             statusBadge.innerText = "✅ LIVE CLOUD SYNCED";
             statusBadge.className = "status-badge connected";
         } catch (err) {
-            statusBadge.innerText = `❌ ERROR: ${err.message}`;
+            statusBadge.innerText = `❌ ERROR: ${err.message || err}`;
             statusBadge.className = "status-badge error";
             console.error(err);
         }
@@ -278,7 +290,9 @@
     }
 
     // Auto-load data on startup
-    window.onload = fetchCloudData;
+    window.onload = function() {
+        fetchCloudData();
+    };
 </script>
 
 </body>
