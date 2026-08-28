@@ -1,316 +1,1858 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZ TOYS ENTERPRISE</title>
-    <style>
-        :root {
-            --primary: #1e293b;
-            --secondary: #0f172a;
-            --accent: #10b981;
-            --danger: #ef4444;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #334155;
-            --border: #cbd5e1;
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2c3e50">
+  <title>AZ TOYS - REPORTS MANAGEMENT (SQLITE)</title>
+  <!-- Include sql.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <style>
+        :root { 
+            --primary-color: #2c3e50; 
+            --secondary-color: #3498db; 
+            --success-color: #27ae60; 
+            --warning-color: #e67e22; 
+            --danger-color: #e74c3c; 
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 15px; }
-        .container { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .header-panel { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-        .status-badge { font-size: 12px; font-weight: bold; padding: 6px 12px; border-radius: 20px; background: #e2e8f0; color: #475569; display: inline-block; }
-        .status-badge.connected { background: #d1fae5; color: #065f46; }
-        .status-badge.error { background: #fee2e2; color: #991b1b; }
-        h1 { font-size: 22px; color: var(--primary); text-align: center; margin: 15px 0; }
-        .nav-tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
-        .nav-tab { background: #e2e8f0; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; }
-        .nav-tab.active { background: var(--primary); color: #fff; }
-        .section-content { display: none; }
-        .section-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-        th { background: var(--bg); color: var(--primary); }
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 14px; }
-        .btn-refresh { background: #3b82f6; margin-bottom: 15px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: #f1f5f9; 
+            color: #334155; 
+            margin: 0; 
+            padding: 10px; 
+            text-transform: uppercase; 
+            font-size: 12px;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 16px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+        }
+        .nav-tabs { 
+            display: flex; 
+            background: #e2e8f0; 
+            border-radius: 8px; 
+            padding: 6px; 
+            margin-bottom: 14px; 
+            gap: 4px; 
+            overflow-x: auto;
+        }
+        .nav-tab { 
+            flex: 1; 
+            padding: 10px 8px; 
+            text-align: center; 
+            background: transparent; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            font-size: 12px; 
+            color: #475569; 
+            cursor: pointer; 
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+        .nav-tab.active { 
+            background: white; 
+            color: var(--primary-color); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
+        .user-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            margin-bottom: 12px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            align-items: center;
+        }
+        h2 { 
+            color: var(--primary-color); 
+            text-align: center; 
+            margin: 8px 0 4px 0; 
+            font-size: 18px; 
+        }
+        .print-company-header {
+            display: none;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .section-title { 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: var(--primary-color); 
+            margin-top: 12px; 
+            margin-bottom: 8px; 
+            border-bottom: 2px solid var(--secondary-color); 
+            padding-bottom: 4px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 8px; 
+            margin-bottom: 10px; 
+        }
+        .input-group { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        label { 
+            font-size: 11px; 
+            font-weight: 600; 
+            margin-bottom: 2px; 
+            color: #475569; 
+        }
+        input, select, textarea { 
+            padding: 8px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            background: #fff; 
+            text-transform: uppercase; 
+            font-family: inherit;
+        }
+        .table-container { 
+            overflow-x: auto; 
+            margin-bottom: 10px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 11px; 
+        }
+        th, td { 
+            border: 1px solid #cbd5e1; 
+            padding: 6px; 
+            text-align: center; 
+            vertical-align: middle;
+        }
+        th { 
+            background-color: var(--primary-color); 
+            color: white; 
+            font-weight: 500; 
+        }
+        td input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            font-size: 12px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .cards-container { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 8px; 
+            margin-bottom: 10px; 
+        }
+        .item-card { 
+            background: #fff; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            padding: 8px; 
+            page-break-inside: avoid;
+        }
+        .card-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 6px; 
+        }
+        .btn-container { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: flex-end; 
+            margin-top: 10px; 
+            flex-wrap: wrap;
+        }
+        button { 
+            background-color: var(--secondary-color); 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+        }
+        button.btn-success { background-color: var(--success-color); }
+        button.btn-warning { background-color: var(--warning-color); }
+        button.btn-print { background-color: #8e44ad; }
+        button.btn-excel { background-color: #16a085; }
+        button.btn-danger { background-color: var(--danger-color); }
+        button:disabled { background-color: #94a3b8 !important; cursor: not-allowed; opacity: 0.7; }
+        .action-btn { background-color: var(--secondary-color); padding: 3px 5px; font-size: 11px; border-radius: 4px; }
+        .edit-btn { background-color: var(--warning-color); padding: 3px 6px; font-size: 11px; border-radius: 4px; }
+        .remove-btn { background: var(--danger-color); padding: 3px 6px; font-size: 11px; border-radius: 4px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .summary-box { background-color: #f8f9fa; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-bottom: 10px; page-break-inside: avoid; }
+        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .summary-item { display: flex; flex-direction: column; }
+        .summary-label { font-size: 10px; color: #64748b; font-weight: 600; }
+        .summary-value { font-size: 14px; font-weight: bold; color: var(--primary-color); margin-top: 2px; }
+
+        .print-only { display: none; }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+            body { 
+                background: white !important; 
+                color: #000 !important; 
+                padding: 0 !important; 
+                font-size: 10px !important;
+            }
+            .nav-tabs, .user-bar, .btn-container, button, .action-btn, .edit-btn, .remove-btn, .no-print, textarea { 
+                display: none !important; 
+            }
+            .print-only { display: table-cell !important; }
+            .container { 
+                box-shadow: none !important; 
+                padding: 0 !important; 
+                max-width: 100% !important; 
+                width: 100% !important; 
+                border: none !important;
+            }
+            .tab-content { display: none !important; }
+            .tab-content.active { display: block !important; }
+            .print-company-header {
+                display: block !important;
+                border-bottom: 2px solid #000;
+                padding-bottom: 4px;
+                margin-bottom: 8px;
+            }
+            h2 { display: none !important; }
+            .section-title {
+                font-size: 12px !important;
+                border-bottom: 1px solid #000 !important;
+                margin-top: 8px !important;
+                margin-bottom: 4px !important;
+                padding-bottom: 2px !important;
+            }
+            table { font-size: 10px !important; page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            th, td { padding: 3px 4px !important; border: 1px solid #333 !important; }
+            th { background-color: #f2f2f2 !important; color: #000 !important; }
+            .summary-box { background: #fff !important; border: 1px solid #000 !important; padding: 6px !important; }
+        }
     </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header-panel">
-        <div>
-            <label style="font-size: 11px; color: #64748b;">ACTIVE USER</label>
-            <select id="userSelect" onchange="activeUser = this.value" style="padding: 6px; font-weight: bold;">
-                <option value="MANAGER">MANAGER</option>
-                <option value="SUPERVISOR">SUPERVISOR</option>
-                <option value="ACCOUNTANT">ACCOUNTANT</option>
-            </select>
-        </div>
-        <div>
-            <div id="syncStatus" class="status-badge">CONNECTING...</div>
-        </div>
+ </head>
+ <body>
+  <div class="container">
+   <div class="user-bar">
+    <span>👤 AZ TOYS</span> 
+    <span id="dbStatus" style="color: var(--warning-color);">⌛ LOADING SQLITE...</span>
+    <div style="display: flex; gap: 6px;" class="no-print">
+        <button class="btn-success" style="padding: 4px 8px; font-size: 10px;" onclick="downloadSQLiteFile()">📥 DOWNLOAD .SQLITE</button>
+        <button class="btn-danger" style="padding: 4px 8px; font-size: 10px;" onclick="createNewDatabase()">🧹 NEW DB</button>
+        <button class="btn-warning" style="padding: 4px 8px; font-size: 10px;" onclick="document.getElementById('sqliteFileInput').click()">📂 OPEN .SQLITE</button>
+        <input type="file" id="sqliteFileInput" style="display: none;" accept=".sqlite,.db" onchange="importSQLiteFile(event)">
+    </div>
+   </div>
+   <h2>AZ TOYS REPORTS</h2>
+   <div class="print-company-header">
+    <h1 style="margin: 0; font-size: 18px; color: #000;">AZ TOYS</h1>
+    <div style="font-size: 11px; margin-top: 2px;" id="printDateLabel"></div>
+   </div>
+   <div class="nav-tabs">
+    <button class="nav-tab" onclick="switchTab('inventory')">1. MAT</button>
+    <button class="nav-tab" onclick="switchTab('billing')">2. BILLING</button>
+    <button class="nav-tab active" onclick="switchTab('production')">3. PROD</button>
+    <button class="nav-tab" onclick="switchTab('expenses')">4. EXP</button>
+    <button class="nav-tab" onclick="switchTab('receivables')">5. LEDGER</button>
+   </div>
+   <!-- REPORT 1: RAW MATERIAL INVENTORY -->
+   <div id="tab-inventory" class="tab-content">
+    <div class="section-title">
+     <span>REPORT 1: RAW MATERIAL INVENTORY &amp; PURCHASES</span>
+     <div style="display: flex; gap: 6px;" class="no-print">
+      <button type="button" class="btn-success" style="padding: 5px 8px; font-size: 11px;" onclick="addNewMaterialType()">+ MAT</button>
+      <button type="button" class="btn-warning" style="padding: 5px 8px; font-size: 11px;" onclick="openPurchaseModal()">+ BUY</button>
+     </div>
+    </div>
+    <div class="form-grid no-print" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
+     <div class="input-group">
+      <label>FROM</label><input type="date" id="stockFromDate" onchange="renderInventory()">
+     </div>
+     <div class="input-group">
+      <label>TO</label><input type="date" id="stockToDate" onchange="renderInventory()">
+     </div>
+    </div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>MATERIAL</th>
+        <th>OPENING</th>
+        <th>BUY (WITH DATE)</th>
+        <th>USE</th>
+        <th>CLOSE</th>
+        <th class="no-print">ACTIONS</th>
+       </tr>
+      </thead>
+      <tbody id="inventoryTableBody"></tbody>
+     </table>
+    </div>
+    <div class="section-title" style="font-size: 12px; margin-top: 10px;">PURCHASE HISTORY LOG</div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>DATE</th>
+        <th>MATERIAL</th>
+        <th>PURCHASE QTY (KG)</th>
+        <th class="no-print">ACTION</th>
+       </tr>
+      </thead>
+      <tbody id="purchaseHistoryTableBody"></tbody>
+     </table>
+    </div>
+    <div class="btn-container">
+     <button class="btn-excel" onclick="exportTableToExcel('inventoryTableBody', 'Raw_Material_Inventory.xls')">📥 EXPORT TO EXCEL</button>
+     <button class="btn-print" onclick="promptAndPrintReport('inventory')">🖨️ PRINT REPORT 1</button>
+    </div>
+   </div>
+   <!-- REPORT 2: BILLING & JOB SPECS -->
+   <div id="tab-billing" class="tab-content">
+    <div class="section-title no-print" style="background: #e2e8f0; padding: 6px; border-radius: 6px; margin-bottom: 10px;">
+     <span>RECALL SLIP # DATA</span>
+     <div style="display: flex; gap: 6px;">
+      <input type="text" id="recallSlipInput" placeholder="ENTER SLIP #" style="padding: 5px; font-size: 11px; width: 100px;">
+      <button type="button" class="btn-warning" style="padding: 5px 8px; font-size: 11px;" onclick="recallSlipData()">🔍 RECALL</button>
+     </div>
+    </div>
+    <div class="section-title">JOB &amp; PRODUCTION PARAMETERS (WITH DATE)</div>
+    <div class="form-grid">
+     <div class="input-group">
+      <label>SLIP #</label><input type="text" id="slipNo" value="963" oninput="saveSpecs()">
+     </div>
+     <div class="input-group">
+      <label>ITEM NAME</label><input type="text" id="itemName" value="STICK" oninput="saveSpecs()">
+     </div>
+     <div class="input-group">
+      <label>PP GRANULES</label><select id="materialType" onchange="saveSpecs()"></select>
+     </div>
+     <div class="input-group">
+      <label>MACHINE NO</label><input type="text" id="machineNo" value="M-06" oninput="saveSpecs()">
+     </div>
+     <div class="input-group">
+      <label>CYCLE TIME (S)</label><input type="number" id="cycleTime" value="20" step="any" oninput="saveSpecs()">
+     </div>
+     <div class="input-group">
+      <label>MOULD CAVITY</label><input type="number" id="mouldCavity" value="2" step="any" oninput="saveSpecs()">
+     </div>
+     <div class="input-group">
+      <label>RATE TYPE</label><select id="rateType" onchange="saveSpecs()"><option value="hourly">PER HOUR</option><option value="weight">PER KG</option><option value="fixed">FIXED</option></select>
+     </div>
+     <div class="input-group">
+      <label>RATE VAL (PKR)</label><input type="number" id="rateValue" value="1000" step="any" oninput="saveSpecs()">
+     </div>
+     <div class="input-group">
+      <label>LABOUR RATE / PC</label><input type="number" id="labourRate" value="2.30" step="any" oninput="saveSpecs()">
+     </div>
+     <div class="input-group">
+      <label>OVERHEAD</label><input type="number" id="extraOverhead" value="0" step="any" oninput="saveSpecs()">
+     </div>
+     <div class="input-group" style="grid-column: span 2;">
+      <label>PRODUCTION / JOB DATE</label><input type="date" id="startDate" onchange="saveSpecs()">
+     </div>
+    </div>
+    <div class="section-title">
+     <span>COLOR CARDS (WEIGHTS &amp; QUANTITIES)</span>
+     <button class="btn-success no-print" style="padding: 5px 8px; font-size: 11px;" onclick="addCard()">+ COLOR</button>
+    </div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>#</th>
+        <th>COLOR NAME</th>
+        <th>QTY (PCS)</th>
+        <th>BAGS</th>
+        <th>GROSS WT</th>
+        <th>NET FINISHED WT</th>
+        <th class="no-print">ACTION</th>
+       </tr>
+      </thead>
+      <tbody id="colorCardsTableBody"></tbody>
+     </table>
+    </div>
+    <div class="section-title">REPORT 2: BILLING SUMMARY INVOICE</div>
+    <div class="summary-box">
+     <div class="summary-grid">
+      <div class="summary-item">
+       <span class="summary-label">TOTAL QTY</span><span class="summary-value" id="totalQty">0 PCS</span>
+      </div>
+      <div class="summary-item">
+       <span class="summary-label">TOTAL GROSS WT</span><span class="summary-value" id="totalGross">0 KG</span>
+      </div>
+      <div class="summary-item">
+       <span class="summary-label">TOTAL NET WT</span><span class="summary-value" id="totalNet">0 KG</span>
+      </div>
+      <div class="summary-item">
+       <span class="summary-label">TOTAL HOURS</span><span class="summary-value" id="totalHours">0 HRS</span>
+      </div>
+      <div class="summary-item">
+       <span class="summary-label">AMOUNT PAYABLE (DEBIT)</span><span class="summary-value" id="totalAmount" style="color: var(--success-color);">0 PKR</span>
+      </div>
+      <div class="summary-item">
+       <span class="summary-label" id="summaryLabourLabel">TOTAL LABOUR COST</span><span class="summary-value" id="summaryLabourVal" style="color: var(--warning-color);">0 PKR</span>
+      </div>
+      <div class="summary-item" style="grid-column: span 2; border-top: 1px solid #cbd5e1; padding-top: 6px; margin-top: 2px;">
+       <span class="summary-label">NET MARGIN (BILLING - LABOUR)</span> <span class="summary-value" id="netMarginVal" style="color: var(--primary-color);">0 PKR</span>
+      </div>
+     </div>
+    </div>
+    <div class="btn-container">
+     <button class="btn-success" id="saveBillingBtn" onclick="saveToReceivables()">💾 SAVE TO LEDGER</button>
+     <button class="btn-warning" onclick="updateRecalledSlip()">✏️ UPDATE SLIP</button>
+     <button class="btn-excel" onclick="exportTableToExcel('colorCardsTableBody', 'Billing_Color_Cards.xls')">📥 EXPORT TO EXCEL</button>
+     <button class="btn-print" onclick="promptAndPrintReport('billing')">🖨️ PRINT REPORT 2</button>
+    </div>
+   </div>
+   <!-- REPORT 3: DAILY PRODUCTION -->
+   <div id="tab-production" class="tab-content active">
+    <div class="section-title">ELECTRIC METER, RENT &amp; SALARY PARAMETERS</div>
+    <div class="form-grid" style="margin-bottom: 10px; grid-template-columns: repeat(2, 1fr);">
+     <div class="input-group">
+      <label>PREV ELEC READING</label><input type="number" id="prevElecReading" value="0" step="any" oninput="saveProdHeader()">
+     </div>
+     <div class="input-group">
+      <label>CURR ELEC READING</label><input type="number" id="currElecReading" value="0" step="any" oninput="saveProdHeader()">
+     </div>
+     <div class="input-group">
+      <label>ELECTRIC RATE / UNIT</label><input type="number" id="elecRatePerUnit" value="0" step="any" oninput="saveProdHeader()">
+     </div>
+     <div class="input-group">
+      <label>MONTHLY FIXED SALARY</label><input type="number" id="monthlyFixedSalary" value="0" step="any" oninput="saveProdHeader()">
+     </div>
+     <div class="input-group" style="grid-column: span 2;">
+      <label>PER DAY RENT COST (PKR)</label><input type="number" id="perDayRentCost" value="0" step="any" oninput="saveProdHeader()">
+     </div>
     </div>
 
-    <h1>AZ TOYS ENTERPRISE</h1>
-
-    <div class="nav-tabs">
-        <button class="nav-tab active" onclick="switchTab(0)">1. INVENTORY</button>
-        <button class="nav-tab" onclick="switchTab(1)">2. PRODUCTION</button>
-        <button class="nav-tab" onclick="switchTab(2)">3. LEDGER</button>
-        <button class="nav-tab" onclick="switchTab(3)">4. DISPATCH</button>
-        <button class="nav-tab" onclick="switchTab(4)">5. EXPENSES</button>
+    <div class="section-title">
+     <span>REPORT 3: ADD SHIFT PRODUCTION RECORD</span>
+    </div>
+    <div class="form-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 8px;">
+     <div class="input-group">
+      <label>LOG DATE</label><input type="date" id="prod-report-date">
+     </div>
+     <div class="input-group">
+      <label>SHIFT (A, B, 24 HOUR)</label>
+      <select id="prodShift">
+       <option value="Shift A">Shift A</option>
+       <option value="Shift B">Shift B</option>
+       <option value="24 Hours" selected>24 Hours</option>
+      </select>
+     </div>
+     <div class="input-group">
+      <label>MACHINE NO</label><input type="text" id="prodMachineNo" placeholder="E.G. M-06">
+     </div>
+     <div class="input-group">
+      <label>OPERATOR</label><input type="text" id="prodOperator" placeholder="OPERATOR NAME">
+     </div>
+     <div class="input-group">
+      <label>NUMBER OF SHOTS</label><input type="number" id="prodShots" placeholder="0" step="any">
+     </div>
+     <div class="input-group">
+      <label>SEC / SHOT</label><input type="number" id="prodSecPerShot" placeholder="20" step="any">
+     </div>
+     <div class="input-group" style="grid-column: span 2;">
+      <label>RATE / HOUR</label><input type="number" id="prodRatePerHour" placeholder="1000" step="any">
+     </div>
+    </div>
+    <div class="btn-container" style="margin-top: 4px; margin-bottom: 12px;">
+     <button class="btn-success no-print" onclick="addNewProdEntry()">+ ADD PRODUCTION ENTRY</button>
     </div>
 
-    <button class="btn btn-refresh" onclick="fetchCloudData()">🔄 REFRESH DATA</button>
-
-    <!-- TAB 1: INVENTORY -->
-    <div class="section-content active" id="tab-0">
-        <h3>Raw Material Stock</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Material</th>
-                    <th>Qty (Kg)</th>
-                    <th>Updated By</th>
-                </tr>
-            </thead>
-            <tbody id="inventoryTable">
-                <tr><td colspan="3" style="text-align:center;">Loading data...</td></tr>
-            </tbody>
-        </table>
-        <div style="margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 8px;">
-            <h4>Add / Update Material</h4>
-            <div class="form-group" style="margin-top: 10px;">
-                <label>Material Name</label>
-                <input type="text" id="matName" placeholder="e.g., PP Granules">
-            </div>
-            <div class="form-group">
-                <label>Quantity (Kg)</label>
-                <input type="number" id="matQty" placeholder="0">
-            </div>
-            <button class="btn" onclick="saveInventory()">Save Entry</button>
-        </div>
+    <div class="section-title">SHIFT PRODUCTION LOGS ENTRY LIST</div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>#</th>
+        <th>DATE</th>
+        <th>SHIFT</th>
+        <th>MACHINE</th>
+        <th>OPERATOR</th>
+        <th>SHOTS</th>
+        <th>SEC/SHOT</th>
+        <th>RATE/HR</th>
+        <th>EARNING</th>
+        <th class="no-print">ACTION</th>
+       </tr>
+      </thead>
+      <tbody id="prodTableBody"></tbody>
+     </table>
     </div>
 
-    <!-- TAB 2: PRODUCTION -->
-    <div class="section-content" id="tab-1">
-        <h3>Production Logs</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Machine</th>
-                    <th>Shots</th>
-                    <th>User</th>
-                </tr>
-            </thead>
-            <tbody id="productionTable">
-                <tr><td colspan="3" style="text-align:center;">Loading...</td></tr>
-            </tbody>
-        </table>
-        <div style="margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 8px;">
-            <h4>Log Production Shift</h4>
-            <div class="form-group" style="margin-top: 10px;">
-                <label>Machine Number</label>
-                <select id="prodMachine">
-                    <option value="Machine 1 (90 Ton)">Machine 1 (90 Ton)</option>
-                    <option value="Machine 2 (120 Ton)">Machine 2 (120 Ton)</option>
-                    <option value="Machine 3 (160 Ton)">Machine 3 (160 Ton)</option>
-                    <option value="Machine 4 (200 Ton)">Machine 4 (200 Ton)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Shots Count</label>
-                <input type="number" id="prodShots" placeholder="0">
-            </div>
-            <button class="btn" onclick="saveProduction()">Submit Log</button>
-        </div>
+    <div class="section-title">ELECTRICITY, RENT &amp; SALARY SUMMARY</div>
+    <div class="summary-box">
+     <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 600; color: #64748b;">TOTAL SHOTS:</span> <span id="totalShotsSum" style="font-size: 14px; font-weight: bold; color: var(--secondary-color);">0 SHOTS</span>
+     </div>
+     <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 600; color: #64748b;">TOTAL POWER CONSUMED:</span> <span id="totalPowerConsumed" style="font-size: 14px; font-weight: bold; color: var(--warning-color);">0 UNITS</span>
+     </div>
+     <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 600; color: #64748b;">ELEC BILL PAYABLE (CREDIT):</span> <span id="totalElecPayableVal" style="font-size: 14px; font-weight: bold; color: var(--danger-color);">0 PKR</span>
+     </div>
+     <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 600; color: #64748b;">RENT PAYABLE (CREDIT):</span> <span id="totalRentPayableVal" style="font-size: 14px; font-weight: bold; color: var(--danger-color);">0 PKR</span>
+     </div>
+     <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 600; color: #64748b;">FIXED SALARY / 30 (CREDIT):</span> <span id="totalSalaryPayableVal" style="font-size: 14px; font-weight: bold; color: var(--danger-color);">0 PKR</span>
+     </div>
+     <div id="machineSummaryContainer" style="display: flex; flex-direction: column; gap: 6px;"></div>
+     <div style="border-top: 2px solid var(--primary-color); padding-top: 8px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: bold; color: var(--primary-color);">NET PROFIT (EARNINGS LESS ALL EXPENSES):</span> <span id="netProfitSummaryVal" style="font-size: 15px; font-weight: bold; color: var(--success-color);">0 PKR</span>
+     </div>
+    </div>
+    <div class="btn-container">
+     <button class="btn-success" id="saveElecRentBtn" onclick="saveElectricityAndRentToLedger()">💾 SAVE ELEC, RENT &amp; SALARY TO LEDGER</button>
+     <button class="btn-excel" onclick="exportTableToExcel('prodTableBody', 'Production_Logs.xls')">📥 EXPORT TO EXCEL</button>
+     <button class="btn-print" onclick="promptAndPrintReport('production')">🖨️ PRINT REPORT 3</button>
+    </div>
+   </div>
+   <!-- REPORT 4: MISCELLANEOUS EXPENSES -->
+   <div id="tab-expenses" class="tab-content">
+    <div class="section-title">
+     <span>MISCELLANEOUS EXPENSES (WITH DATE)</span>
+     <button class="btn-success no-print" style="padding: 5px 8px; font-size: 11px;" onclick="addExpenseRow()">+ EXPENSE</button>
+    </div>
+    <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
+     <div class="input-group">
+      <label>EXPENSE DATE</label><input type="date" id="expenseDate" onchange="handleExpenseDateChange()">
+     </div>
+    </div>
+    <div id="expensesCardsContainer" class="cards-container"></div>
+    <div class="summary-box">
+     <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 600;">TOTAL MISCELLANEOUS EXPENSES (CREDIT):</span> <span id="totalExpensesAmount" style="font-size: 15px; font-weight: bold; color: var(--danger-color);">0 PKR</span>
+     </div>
+    </div>
+    <div class="btn-container">
+     <button class="btn-success" id="saveExpensesBtn" onclick="saveExpensesToLedger()">💾 SAVE EXPENSES TO LEDGER</button>
+     <button class="btn-excel" onclick="exportExpensesToExcel()">📥 EXPORT TO EXCEL</button>
+     <button class="btn-print" onclick="promptAndPrintReport('expenses')">🖨️ PRINT EXPENSES PDF</button>
+    </div>
+   </div>
+   <!-- REPORT 5: RECEIVABLES & LEDGER -->
+   <div id="tab-receivables" class="tab-content">
+    <div class="section-title no-print" style="background: #e2e8f0; padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+     <span>MAKE PAYMENT AGAINST CREDIT</span>
+    </div>
+    <div class="form-grid no-print" style="grid-template-columns: 2fr 1fr 1fr auto; margin-bottom: 12px; gap: 6px;">
+     <div class="input-group">
+      <label>SELECT CREDIT ENTRY</label>
+      <select id="creditDropdown" onchange="onCreditSelected()"></select>
+     </div>
+     <div class="input-group">
+      <label>PAYMENT DATE</label>
+      <input type="date" id="paymentDate">
+     </div>
+     <div class="input-group">
+      <label>PAYMENT AMOUNT (PKR)</label>
+      <input type="number" id="paymentAmount" step="any">
+     </div>
+     <div class="input-group" style="justify-content: flex-end;">
+      <label>&nbsp;</label>
+      <button type="button" class="btn-success" style="padding: 8px 12px;" onclick="makePaymentAgainstCredit()">✓ PAY (DEBIT ONLY)</button>
+     </div>
     </div>
 
-    <!-- TAB 3: LEDGER -->
-    <div class="section-content" id="tab-2">
-        <h3>Financial Ledger</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>User</th>
-                </tr>
-            </thead>
-            <tbody id="ledgerTable">
-                <tr><td colspan="3" style="text-align:center;">Loading...</td></tr>
-            </tbody>
-        </table>
-        <div style="margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 8px;">
-            <h4>Add Ledger Entry</h4>
-            <div class="form-group" style="margin-top: 10px;">
-                <label>Description</label>
-                <input type="text" id="ledgerDesc" placeholder="Client payment / Party name">
-            </div>
-            <div class="form-group">
-                <label>Amount (PKR)</label>
-                <input type="number" id="ledgerAmount" placeholder="0">
-            </div>
-            <button class="btn" onclick="saveLedger()">Add Entry</button>
-        </div>
+    <div class="section-title">
+     <span>MASTER LEDGER (DEBIT / CREDIT WITH DATES)</span>
+     <div style="display: flex; gap: 6px;" class="no-print">
+      <button type="button" class="btn-warning" style="padding: 5px 8px; font-size: 11px;" onclick="promptMonthlyLedger()">📅 MONTHLY LEDGER</button>
+     </div>
     </div>
-
-    <!-- TAB 4: DISPATCH -->
-    <div class="section-content" id="tab-3">
-        <h3>Dispatch Management</h3>
-        <p style="margin-top:10px; font-size:14px; color:#64748b;">Manage outgoing toy shipments and wholesale deliveries here.</p>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>DATE</th>
+        <th>SLIP / REF #</th>
+        <th>DESCRIPTION / ITEM</th>
+        <th>DEBIT (PKR)</th>
+        <th>CREDIT (PKR)</th>
+        <th class="no-print">ACTION</th>
+       </tr>
+      </thead>
+      <tbody id="receivablesTableBody"></tbody>
+     </table>
     </div>
-
-    <!-- TAB 5: EXPENSES -->
-    <div class="section-content" id="tab-4">
-        <h3>Factory Expenses</h3>
-        <p style="margin-top:10px; font-size:14px; color:#64748b;">Track utility bills, maintenance overheads, and daily factory costs.</p>
+    <div class="summary-box">
+     <div class="summary-grid">
+      <div class="summary-item">
+       <span class="summary-label">TOTAL DEBIT</span><span class="summary-value" id="totalDebitVal" style="color: var(--success-color);">0 PKR</span>
+      </div>
+      <div class="summary-item">
+       <span class="summary-label">TOTAL CREDIT</span><span class="summary-value" id="totalCreditVal" style="color: var(--danger-color);">0 PKR</span>
+      </div>
+      <div class="summary-item" style="grid-column: span 2;">
+       <span class="summary-label">NET BALANCE (DEBIT - CREDIT)</span><span class="summary-value" id="totalReceivablesAmount" style="color: var(--primary-color);">0 PKR</span>
+      </div>
+     </div>
     </div>
-</div>
+    <div class="btn-container">
+     <button class="btn-excel" onclick="exportTableToExcel('receivablesTableBody', 'Master_Ledger.xls')">📥 EXPORT TO EXCEL</button>
+     <button class="btn-print" onclick="promptAndPrintReport('receivables')">🖨️ PRINT LEDGER PDF</button>
+    </div>
+   </div>
+  </div>
+  <script>
+    let db = null;
+    let autoSaveTimer = null;
 
-<script>
-    const SUPABASE_URL = 'https://qnorrqaufbusfnwapllk.supabase.co';
-    const SUPABASE_ANON_KEY = 'Sb_publishable_-Fjarq_4Qt4HTnDIvJ3M9w_p0nrHunt';
+    let inventoryData = JSON.parse(localStorage.getItem('aztoys_inventoryData')) || { 
+        "PURE PP": { opening: 500 },
+        "RECYCLE PP": { opening: 300 }
+    };
+    let transactions = JSON.parse(localStorage.getItem('aztoys_transactions')) || [];
+    let itemsData = JSON.parse(localStorage.getItem('aztoys_itemsData')) || [{ color: "STICK GREEN", qty: 3000, bags: 2, gross: 16.3, net: 16.2 }];
+    let specs = JSON.parse(localStorage.getItem('aztoys_specs')) || {};
+    let billingHistory = JSON.parse(localStorage.getItem('aztoys_billingHistory')) || {};
+    let prodHeader = JSON.parse(localStorage.getItem('aztoys_prodHeader')) || { prevElec: 0, currElec: 0, elecRate: 0, rentCost: 0, monthlySalary: 0 };
+    let prodData = JSON.parse(localStorage.getItem('aztoys_prodData')) || [
+        { date: new Date().toISOString().split('T')[0], shift: "24 Hours", machineNo: "M-06", operator: "ALI", shots: 1200, secPerShot: 20, ratePerHour: 1000 }
+    ];
+    let expensesData = JSON.parse(localStorage.getItem('aztoys_expensesData')) || [
+        { description: "TEA & REFRESHMENT", amount: 500 }
+    ];
     
-    const statusBadge = document.getElementById('syncStatus');
-    let activeUser = "MANAGER";
+    let receivablesData = JSON.parse(localStorage.getItem('aztoys_receivablesData')) || [];
+    let postedSlips = JSON.parse(localStorage.getItem('aztoys_postedSlips')) || {};
 
-    function switchTab(index) {
-        const tabs = document.querySelectorAll('.nav-tab');
-        const contents = document.querySelectorAll('.section-content');
-        tabs.forEach((t, i) => {
-            t.classList.toggle('active', i === index);
-            contents[i].classList.toggle('active', i === index);
+    initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` }).then(SQL => {
+        let savedDb = localStorage.getItem('aztoys_sqlite_bin');
+        if (savedDb) {
+            try {
+                let u8arr = new Uint8Array(JSON.parse(savedDb));
+                db = new SQL.Database(u8arr);
+            } catch(e) {
+                db = new SQL.Database();
+                initSQLiteTables();
+            }
+        } else {
+            db = new SQL.Database();
+            initSQLiteTables();
+        }
+        syncMemoryToSQLite();
+        document.getElementById('dbStatus').style.color = 'var(--success-color)';
+        document.getElementById('dbStatus').innerText = '💾 SQLITE ACTIVE (AUTO-SAVE ON)';
+    }).catch(err => {
+        console.error(err);
+        document.getElementById('dbStatus').style.color = 'var(--danger-color)';
+        document.getElementById('dbStatus').innerText = '⚠️ SQLITE ERROR';
+    });
+
+    function initSQLiteTables() {
+        if(!db) return;
+        db.run(`
+            CREATE TABLE IF NOT EXISTS kv_store (key TEXT PRIMARY KEY, value TEXT);
+        `);
+        persistAllToSQLite();
+    }
+
+    function persistAllToSQLite(isExplicit = false) {
+        if(!db) return;
+        let dataMap = {
+            'inventoryData': inventoryData,
+            'transactions': transactions,
+            'itemsData': itemsData,
+            'specs': specs,
+            'billingHistory': billingHistory,
+            'prodHeader': prodHeader,
+            'prodData': prodData,
+            'expensesData': expensesData,
+            'receivablesData': receivablesData,
+            'postedSlips': postedSlips
+        };
+
+        db.run("BEGIN TRANSACTION;");
+        for (let k in dataMap) {
+            let stmt = db.prepare("INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?);");
+            stmt.run([k, JSON.stringify(dataMap[k])]);
+            stmt.free();
+        }
+        db.run("COMMIT;");
+
+        let binaryArray = db.export();
+        localStorage.setItem('aztoys_sqlite_bin', JSON.stringify(Array.from(binaryArray)));
+
+        let statusEl = document.getElementById('dbStatus');
+        if(statusEl && statusEl.innerText.includes("SQLITE ACTIVE")) {
+            let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            statusEl.innerText = `💾 DATA SAVED (${timeStr})`;
+            if (isExplicit) {
+                alert("Data Saved Successfully!");
+            }
+            setTimeout(() => {
+                statusEl.innerText = '💾 SQLITE ACTIVE (AUTO-SAVE ON)';
+            }, 2000);
+        }
+    }
+
+    function triggerAutoSave() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(() => {
+            persistAllToSQLite(true);
+        }, 500);
+    }
+
+    function syncMemoryToSQLite() {
+        persistAllToSQLite(false);
+    }
+
+    function createNewDatabase() {
+        if(confirm("ARE YOU SURE YOU WANT TO DELETE THE PREVIOUS DATABASE AND CREATE A FRESH NEW ONE? ALL UNSAVED LOCAL DATA WILL BE RESET.")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    async function downloadSQLiteFile() {
+        if(!db) { alert("Database not ready!"); return; }
+        persistAllToSQLite(false);
+        let binaryArray = db.export();
+
+        let blob = new Blob([binaryArray], { type: 'application/x-sqlite3' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'az_toys_database.sqlite';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function importSQLiteFile(event) {
+        let file = event.target.files[0];
+        if(!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let u8arr = new Uint8Array(e.target.result);
+                initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` }).then(SQL => {
+                    db = new SQL.Database(u8arr);
+                    let stmt = db.prepare("SELECT key, value FROM kv_store;");
+                    while(stmt.step()) {
+                        let row = stmt.get();
+                        let k = row[0], val = JSON.parse(row[1]);
+                        if(k === 'inventoryData') inventoryData = val;
+                        if(k === 'transactions') transactions = val;
+                        if(k === 'itemsData') itemsData = val;
+                        if(k === 'specs') specs = val;
+                        if(k === 'billingHistory') billingHistory = val;
+                        if(k === 'prodHeader') prodHeader = val;
+                        if(k === 'prodData') prodData = val;
+                        if(k === 'expensesData') expensesData = val;
+                        if(k === 'receivablesData') receivablesData = val;
+                        if(k === 'postedSlips') postedSlips = val;
+                    }
+                    stmt.free();
+                    persistAllToSQLite(false);
+                    location.reload();
+                });
+            } catch(err) {
+                alert("Invalid SQLite file format!");
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        updateDropdown();
+        recallDates();
+        renderInventory();
+        renderCards();
+        renderProdCards();
+        renderExpensesCards();
+        renderReceivables();
+        
+        let todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('prevElecReading').value = prodHeader.prevElec !== undefined ? prodHeader.prevElec : 0;
+        document.getElementById('currElecReading').value = prodHeader.currElec !== undefined ? prodHeader.currElec : 0;
+        document.getElementById('elecRatePerUnit').value = prodHeader.elecRate !== undefined ? prodHeader.elecRate : 0;
+        document.getElementById('perDayRentCost').value = prodHeader.rentCost !== undefined ? prodHeader.rentCost : 0;
+        document.getElementById('monthlyFixedSalary').value = prodHeader.monthlySalary !== undefined ? prodHeader.monthlySalary : 0;
+        document.getElementById('expenseDate').value = prodHeader.expenseDate || todayStr;
+        document.getElementById('prod-report-date').valueAsDate = new Date();
+        document.getElementById('paymentDate').value = todayStr;
+
+        document.getElementById('printDateLabel').innerText = "PRINTED ON: " + todayStr;
+
+        if(specs.slipNo) {
+            document.getElementById('slipNo').value = specs.slipNo || '';
+            document.getElementById('itemName').value = specs.itemName || '';
+            if(specs.materialType) document.getElementById('materialType').value = specs.materialType;
+            document.getElementById('machineNo').value = specs.machineNo || '';
+            document.getElementById('cycleTime').value = specs.cycleTime !== undefined ? specs.cycleTime : 20;
+            document.getElementById('mouldCavity').value = specs.mouldCavity !== undefined ? specs.mouldCavity : 2;
+            document.getElementById('rateType').value = specs.rateType || 'hourly';
+            document.getElementById('rateValue').value = specs.rateValue !== undefined ? specs.rateValue : 1000;
+            document.getElementById('labourRate').value = (specs.labourRate !== undefined && !isNaN(specs.labourRate) && specs.labourRate !== "") ? specs.labourRate : 2.30;
+            document.getElementById('extraOverhead').value = specs.extraOverhead !== undefined ? specs.extraOverhead : 0;
+            document.getElementById('startDate').value = specs.startDate || todayStr;
+        } else {
+            document.getElementById('labourRate').value = 2.30;
+            document.getElementById('startDate').value = todayStr;
+        }
+        calculateBilling();
+        syncConsumptionFromBilling();
+        checkBillingPostedStatus();
+        checkElecRentPostedStatus();
+        checkExpensesPostedStatus();
+        setupInputAutoSelect();
+    });
+
+    function setupInputAutoSelect() {
+        document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], select').forEach(element => {
+            element.addEventListener('focus', function() {
+                if(this.select) this.select();
+            });
+            element.addEventListener('input', function() {
+                triggerAutoSave();
+            });
+            element.addEventListener('change', function() {
+                triggerAutoSave();
+            });
         });
     }
 
-    // Fallback Local Storage Mode if Cloud is Blocked/Offline
-    async function fetchCloudData() {
-        statusBadge.innerText = "CONNECTING...";
-        statusBadge.className = "status-badge";
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        
+        let tabEl = document.getElementById('tab-' + tabId);
+        if(tabEl) tabEl.classList.add('active');
+        if(event && event.target) event.target.classList.add('active');
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased to 8 seconds
+        if(tabId === 'inventory') renderInventory();
+        if(tabId === 'billing') { updateDropdown(); renderCards(); calculateBilling(); checkBillingPostedStatus(); }
+        if(tabId === 'production') { renderProdCards(); checkElecRentPostedStatus(); }
+        if(tabId === 'expenses') { renderExpensesCards(); checkExpensesPostedStatus(); }
+        if(tabId === 'receivables') renderReceivables();
+        setupInputAutoSelect();
+    }
 
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory?select=*`, {
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                },
-                signal: controller.signal
+    function recallDates() {
+        let today = new Date();
+        document.getElementById('stockFromDate').value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        document.getElementById('stockToDate').value = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+    }
+
+    function promptAndPrintReport(reportType) {
+        let defaultStart = new Date().toISOString().split('T')[0];
+        let defaultEnd = defaultStart;
+        let startPrompt = prompt("ENTER START DATE (YYYY-MM-DD):", defaultStart);
+        if(!startPrompt) return;
+        let endPrompt = prompt("ENTER END DATE (YYYY-MM-DD):", defaultEnd);
+        if(!endPrompt) return;
+
+        document.getElementById('printDateLabel').innerText = `PERIOD: ${startPrompt} TO ${endPrompt}`;
+        window.print();
+    }
+
+    function promptMonthlyLedger() {
+        let currentMonth = new Date().toISOString().slice(0, 7);
+        let monthInput = prompt("ENTER MONTH (YYYY-MM):", currentMonth);
+        if(!monthInput) return;
+
+        let startStr = monthInput + "-01";
+        let d = new Date(monthInput + "-01");
+        let endStr = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
+
+        document.getElementById('printDateLabel').innerText = `MONTHLY LEDGER PERIOD: ${startStr} TO ${endStr}`;
+        window.print();
+    }
+
+    function exportTableToExcel(tableBodyId, filename = 'report.xls') {
+        let tbody = document.getElementById(tableBodyId);
+        if(!tbody) { alert("Table body not found!"); return; }
+        
+        let table = tbody.closest('table');
+        if(!table) { alert("Table not found!"); return; }
+
+        let cloneTable = table.cloneNode(true);
+        cloneTable.querySelectorAll('.no-print, th:last-child, td:last-child').forEach(el => el.remove());
+
+        let html = cloneTable.outerHTML;
+        let blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function exportExpensesToExcel() {
+        let html = `<table><thead><tr><th>DESCRIPTION</th><th>AMOUNT (PKR)</th></tr></thead><tbody>`;
+        expensesData.forEach(exp => {
+            let amtVal = (exp && exp.amount !== undefined && !isNaN(exp.amount)) ? Number(exp.amount) : 0;
+            let descVal = (exp && exp.description) ? exp.description : '';
+            html += `<tr><td>${descVal}</td><td>${amtVal}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        let blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'Expenses_Report.xls';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    
+    function renderInventory() {
+        let fromDate = document.getElementById('stockFromDate').value;
+        let toDate = document.getElementById('stockToDate').value;
+        let tbody = document.getElementById('inventoryTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = "";
+        
+        Object.keys(inventoryData).forEach(material => {
+            let baseOpening = (inventoryData[material] && inventoryData[material].opening !== undefined && !isNaN(inventoryData[material].opening)) ? Number(inventoryData[material].opening) : 0;
+            let priorPurchases = 0, priorConsumption = 0, periodPurchases = 0, periodConsumption = 0;
+
+            transactions.forEach(t => {
+                if (t && t.material === material) {
+                    let tQty = (t.qty !== undefined && !isNaN(t.qty)) ? Number(t.qty) : 0;
+                    if (fromDate && t.date < fromDate) {
+                        if (t.type === 'purchase') priorPurchases += tQty;
+                        if (t.type === 'consumption') priorConsumption += tQty;
+                    } else if ((!fromDate || t.date >= fromDate) && (!toDate || t.date <= toDate)) {
+                        if (t.type === 'purchase') periodPurchases += tQty;
+                        if (t.type === 'consumption') periodConsumption += tQty;
+                    }
+                }
             });
-            clearTimeout(timeoutId);
 
-            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-            const invData = await response.json();
-            
-            renderInventory(invData);
-            statusBadge.innerText = "✅ LIVE CLOUD SYNCED";
-            statusBadge.className = "status-badge connected";
-        } catch (err) {
-            statusBadge.innerText = `⚠️ OFFLINE (${err.name === 'AbortError' ? 'Timeout' : err.message})`;
-            statusBadge.className = "status-badge error";
-            loadLocalData();
+            let openingStock = baseOpening + priorPurchases - priorConsumption;
+            let closingStock = (openingStock + periodPurchases) - periodConsumption;
+
+            let row = tbody.insertRow();
+            row.innerHTML = `
+                <td style="font-weight:600; text-align:left;">${material}</td>
+                <td>${openingStock}</td>
+                <td style="color:var(--success-color);">+${periodPurchases}</td>
+                <td style="color:var(--danger-color);">-${periodConsumption}</td>
+                <td style="font-weight:bold;">${closingStock}</td>
+                <td class="no-print">
+                    <div style="display:flex; gap:4px; justify-content:center;">
+                        <button class="action-btn" onclick="editInv('${material}')">EDIT</button>
+                        <button class="remove-btn" onclick="deleteMaterial('${material}')">DEL</button>
+                    </div>
+                </td>
+            `;
+        });
+
+        let pTbody = document.getElementById('purchaseHistoryTableBody');
+        if(pTbody) {
+            pTbody.innerHTML = "";
+            let purchaseTx = transactions.filter(t => t && t.type === 'purchase');
+            purchaseTx.forEach((p) => {
+                let actualIndex = transactions.indexOf(p);
+                let pQty = (p && p.qty !== undefined && !isNaN(p.qty)) ? Number(p.qty) : 0;
+                let pDate = (p && p.date) ? p.date : '';
+                let pMat = (p && p.material) ? p.material : '';
+                pTbody.innerHTML += `
+                    <tr>
+                        <td><strong>${pDate}</strong></td>
+                        <td>${pMat}</td>
+                        <td style="color:var(--success-color); font-weight:bold;">+${pQty} KG</td>
+                        <td class="no-print">
+                            <button class="remove-btn" onclick="deleteTransaction(${actualIndex})">DEL</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            if(purchaseTx.length === 0) {
+                pTbody.innerHTML = `<tr><td colspan="4" style="color:#64748b;">NO PURCHASE RECORDS FOUND</td></tr>`;
+            }
+        }
+        setupInputAutoSelect();
+    }
+
+    function addNewMaterialType() {
+        let namePrompt = prompt("MATERIAL NAME:");
+        if(!namePrompt) return;
+        let name = namePrompt.trim().toUpperCase();
+        if(!name || inventoryData[name]) return;
+        let opPrompt = prompt("INITIAL STOCK (KG):", "0");
+        let opening = (opPrompt !== null && !isNaN(opPrompt) && opPrompt !== "") ? Number(opPrompt) : 0;
+        inventoryData[name] = { opening: opening };
+        persistAllToSQLite(true);
+        renderInventory();
+        updateDropdown();
+    }
+
+    function openPurchaseModal() {
+        let keys = Object.keys(inventoryData);
+        if(keys.length === 0) { alert("ADD A MATERIAL TYPE FIRST!"); return; }
+        let matPrompt = prompt(`MATERIAL (${keys.join(", ")}):`, keys[0]);
+        if(!matPrompt) return;
+        let mat = matPrompt.toUpperCase();
+        if(!inventoryData[mat]) return;
+        let qtyPrompt = prompt("PURCHASE QTY (KG):", "100");
+        let qty = (qtyPrompt !== null && !isNaN(qtyPrompt) && qtyPrompt !== "") ? Number(qtyPrompt) : 0;
+        let todayStr = new Date().toISOString().split('T')[0];
+        let date = prompt("PURCHASE DATE (YYYY-MM-DD):", todayStr);
+        if(qty > 0 && date) {
+            transactions.push({ date, type: 'purchase', material: mat, qty });
+            persistAllToSQLite(true);
+            renderInventory();
         }
     }
 
-    function renderInventory(data) {
-        const invTable = document.getElementById('inventoryTable');
-        if (data && data.length > 0) {
-            invTable.innerHTML = data.map(item => `<tr><td>${item.material_name}</td><td>${item.qty}</td><td>${item.updated_by}</td></tr>`).join('');
+    function deleteTransaction(idx) {
+        if(confirm("DELETE THIS PURCHASE RECORD?")) {
+            transactions.splice(idx, 1);
+            persistAllToSQLite(true);
+            renderInventory();
+        }
+    }
+
+    function editInv(mat) {
+        if(!inventoryData[mat]) return;
+        let opPrompt = prompt("NEW OPENING STOCK:", inventoryData[mat].opening !== undefined ? inventoryData[mat].opening : 0);
+        let op = (opPrompt !== null && !isNaN(opPrompt) && opPrompt !== "") ? Number(opPrompt) : NaN;
+        if(!isNaN(op)) {
+            inventoryData[mat].opening = op;
+            persistAllToSQLite(true);
+            renderInventory();
+        }
+    }
+
+    function deleteMaterial(mat) {
+        if(confirm(`ARE YOU SURE YOU WANT TO DELETE ${mat}?`)) {
+            delete inventoryData[mat];
+            persistAllToSQLite(true);
+            renderInventory();
+            updateDropdown();
+        }
+    }
+
+    function updateDropdown() {
+        let sel = document.getElementById('materialType');
+        if(!sel) return;
+        let cur = specs.materialType || sel.value;
+        sel.innerHTML = "";
+        Object.keys(inventoryData).forEach(m => {
+            let opt = document.createElement('option');
+            opt.value = m; opt.textContent = m;
+            if(m === cur) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+
+    function saveSpecs() {
+        let oldSlip = specs.slipNo;
+        let slipNoVal = document.getElementById('slipNo');
+        let itemNameVal = document.getElementById('itemName');
+        let materialTypeVal = document.getElementById('materialType');
+        let machineNoVal = document.getElementById('machineNo');
+        let cycleTimeVal = document.getElementById('cycleTime');
+        let mouldCavityVal = document.getElementById('mouldCavity');
+        let rateTypeVal = document.getElementById('rateType');
+        let rateValueVal = document.getElementById('rateValue');
+        let labourRateVal = document.getElementById('labourRate');
+        let extraOverheadVal = document.getElementById('extraOverhead');
+        let startDateVal = document.getElementById('startDate');
+
+        specs = {
+            slipNo: slipNoVal ? slipNoVal.value.toUpperCase() : '',
+            itemName: itemNameVal ? itemNameVal.value.toUpperCase() : '',
+            materialType: materialTypeVal ? materialTypeVal.value.toUpperCase() : '',
+            machineNo: machineNoVal ? machineNoVal.value.toUpperCase() : '',
+            cycleTime: (cycleTimeVal && !isNaN(cycleTimeVal.value) && cycleTimeVal.value !== "") ? Number(cycleTimeVal.value) : 0,
+            mouldCavity: (mouldCavityVal && !isNaN(mouldCavityVal.value) && mouldCavityVal.value !== "") ? Number(mouldCavityVal.value) : 1,
+            rateType: rateTypeVal ? rateTypeVal.value : 'hourly',
+            rateValue: (rateValueVal && !isNaN(rateValueVal.value) && rateValueVal.value !== "") ? Number(rateValueVal.value) : 0,
+            labourRate: (labourRateVal && !isNaN(labourRateVal.value) && labourRateVal.value !== "") ? Number(labourRateVal.value) : 0,
+            extraOverhead: (extraOverheadVal && !isNaN(extraOverheadVal.value) && extraOverheadVal.value !== "") ? Number(extraOverheadVal.value) : 0,
+            startDate: startDateVal ? startDateVal.value : new Date().toISOString().split('T')[0]
+        };
+        persistAllToSQLite(false);
+        if(oldSlip !== specs.slipNo) {
+            checkBillingPostedStatus();
+        }
+        calculateBilling();
+        syncConsumptionFromBilling();
+    }
+
+    function checkBillingPostedStatus() {
+        let slipInput = document.getElementById('slipNo');
+        let slip = slipInput ? slipInput.value.toUpperCase() : (specs.slipNo || '');
+        let btn = document.getElementById('saveBillingBtn');
+        if(!btn) return;
+        let key = "BILLING_" + slip;
+        if(postedSlips[key]) {
+            btn.disabled = true;
+            btn.innerText = "🔒 ALREADY POSTED TO LEDGER";
         } else {
-            invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No records found. Add one below.</td></tr>`;
+            btn.disabled = false;
+            btn.innerText = "💾 SAVE TO LEDGER";
         }
     }
 
-    function loadLocalData() {
-        const localInv = JSON.parse(localStorage.getItem('az_inventory') || '[]');
-        renderInventory(localInv);
-
-        const localProd = JSON.parse(localStorage.getItem('az_production') || '[]');
-        const prodTable = document.getElementById('productionTable');
-        prodTable.innerHTML = localProd.length ? localProd.map(i => `<tr><td>${i.machine}</td><td>${i.shots}</td><td>${i.user_name}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;">No local logs.</td></tr>`;
-
-        const localLedger = JSON.parse(localStorage.getItem('az_ledger') || '[]');
-        const ledgerTable = document.getElementById('ledgerTable');
-        ledgerTable.innerHTML = localLedger.length ? localLedger.map(i => `<tr><td>${i.description}</td><td>${i.amount}</td><td>${i.user_name}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;">No local entries.</td></tr>`;
+    function checkElecRentPostedStatus() {
+        let prodDateInput = document.getElementById('prod-report-date');
+        let date = (prodDateInput && prodDateInput.value) ? prodDateInput.value : (specs.startDate || new Date().toISOString().split('T')[0]);
+        let btn = document.getElementById('saveElecRentBtn');
+        if(!btn) return;
+        let key = "ELEC_RENT_" + date;
+        if(postedSlips[key]) {
+            btn.disabled = true;
+            btn.innerText = "🔒 ELEC, RENT & SALARY ALREADY POSTED";
+        } else {
+            btn.disabled = false;
+            btn.innerText = "💾 SAVE ELEC, RENT & SALARY TO LEDGER";
+        }
     }
 
-    async function saveInventory() {
-        const name = document.getElementById('matName').value;
-        const qty = parseFloat(document.getElementById('matQty').value);
-        if(!name || isNaN(qty)) { alert('Please enter valid details'); return; }
+    function checkExpensesPostedStatus() {
+        let expenseDateInput = document.getElementById('expenseDate');
+        let date = (expenseDateInput && expenseDateInput.value) ? expenseDateInput.value : new Date().toISOString().split('T')[0];
+        let btn = document.getElementById('saveExpensesBtn');
+        if(!btn) return;
+        let key = "EXPENSES_" + date;
+        if(postedSlips[key]) {
+            btn.disabled = true;
+            btn.innerText = "🔒 EXPENSES ALREADY POSTED";
+        } else {
+            btn.disabled = false;
+            btn.innerText = "💾 SAVE EXPENSES TO LEDGER";
+        }
+    }
 
-        const entry = { material_name: name, qty: qty, updated_by: activeUser };
+    function saveProdHeader() {
+        let prevElecVal = document.getElementById('prevElecReading');
+        let currElecVal = document.getElementById('currElecReading');
+        let elecRateVal = document.getElementById('elecRatePerUnit');
+        let rentCostVal = document.getElementById('perDayRentCost');
+        let monthlySalaryVal = document.getElementById('monthlyFixedSalary');
+        let expenseDateVal = document.getElementById('expenseDate');
 
-        try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/inventory`, {
-                method: 'POST',
-                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                body: JSON.stringify(entry)
+        prodHeader = {
+            prevElec: (prevElecVal && !isNaN(prevElecVal.value) && prevElecVal.value !== "") ? Number(prevElecVal.value) : 0,
+            currElec: (currElecVal && !isNaN(currElecVal.value) && currElecVal.value !== "") ? Number(currElecVal.value) : 0,
+            elecRate: (elecRateVal && !isNaN(elecRateVal.value) && elecRateVal.value !== "") ? Number(elecRateVal.value) : 0,
+            rentCost: (rentCostVal && !isNaN(rentCostVal.value) && rentCostVal.value !== "") ? Number(rentCostVal.value) : 0,
+            monthlySalary: (monthlySalaryVal && !isNaN(monthlySalaryVal.value) && monthlySalaryVal.value !== "") ? Number(monthlySalaryVal.value) : 0,
+            expenseDate: (expenseDateVal && expenseDateVal.value) ? expenseDateVal.value : new Date().toISOString().split('T')[0]
+        };
+        persistAllToSQLite(false);
+        calculateMachineSummary();
+        checkElecRentPostedStatus();
+    }
+
+    function handleExpenseDateChange() {
+        saveProdHeader();
+        checkExpensesPostedStatus();
+    }
+
+    function renderCards() {
+        let tbody = document.getElementById('colorCardsTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = "";
+        itemsData.forEach((item, idx) => {
+            let colorVal = (item && item.color) ? item.color : '';
+            let qtyVal = (item && item.qty !== undefined && !isNaN(item.qty)) ? item.qty : 0;
+            let bagVal = (item && item.bags !== undefined && !isNaN(item.bags)) ? item.bags : 0;
+            let grossVal = (item && item.gross !== undefined && !isNaN(item.gross)) ? item.gross : 0;
+            let netVal = (item && item.net !== undefined && !isNaN(item.net)) ? item.net : 0;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>#${idx+1}</strong></td>
+                    <td><input type="text" class="c-color" value="${colorVal}" oninput="updateItemData()" style="text-align:left;"></td>
+                    <td><input type="number" class="c-qty" value="${qtyVal}" step="any" oninput="updateItemData()"></td>
+                    <td><input type="number" class="c-bag" value="${bagVal}" step="any" oninput="updateItemData()"></td>
+                    <td><input type="number" class="c-gross" value="${grossVal}" step="any" oninput="updateItemData()"></td>
+                    <td><input type="number" class="c-net" value="${netVal}" step="any" oninput="updateItemData()"></td>
+                    <td class="no-print">
+                        <button class="remove-btn" onclick="removeCard(${idx})">DEL</button>
+                    </td>
+                </tr>
+            `;
+        });
+        calculateBilling();
+        syncConsumptionFromBilling();
+        setupInputAutoSelect();
+    }
+
+    function updateItemData() {
+        let rows = document.querySelectorAll('#colorCardsTableBody tr');
+        rows.forEach((row, idx) => {
+            if(itemsData[idx]) {
+                let cColor = row.querySelector('.c-color');
+                let cQty = row.querySelector('.c-qty');
+                let cBag = row.querySelector('.c-bag');
+                let cGross = row.querySelector('.c-gross');
+                let cNet = row.querySelector('.c-net');
+
+                itemsData[idx].color = cColor ? cColor.value.toUpperCase() : '';
+                itemsData[idx].qty = (cQty && !isNaN(cQty.value) && cQty.value !== "") ? Number(cQty.value) : 0;
+                itemsData[idx].bags = (cBag && !isNaN(cBag.value) && cBag.value !== "") ? Number(cBag.value) : 0;
+                itemsData[idx].gross = (cGross && !isNaN(cGross.value) && cGross.value !== "") ? Number(cGross.value) : 0;
+                itemsData[idx].net = (cNet && !isNaN(cNet.value) && cNet.value !== "") ? Number(cNet.value) : 0;
+            }
+        });
+        triggerAutoSave();
+        calculateBilling();
+        syncConsumptionFromBilling();
+    }
+
+    function syncConsumptionFromBilling() {
+        let totalGross = 0;
+        itemsData.forEach(i => { 
+            totalGross += (i && i.gross !== undefined && !isNaN(i.gross)) ? Number(i.gross) : 0; 
+        });
+        let matTypeElem = document.getElementById('materialType');
+        let defaultMat = Object.keys(inventoryData)[0] || '';
+        let matType = specs.materialType || (matTypeElem ? matTypeElem.value : defaultMat);
+        let entryDate = specs.startDate || new Date().toISOString().split('T')[0];
+
+        transactions = transactions.filter(t => !(t && t.source === 'billing_auto'));
+
+        if (totalGross > 0 && matType) {
+            transactions.push({
+                date: entryDate,
+                type: 'consumption',
+                material: matType,
+                qty: totalGross,
+                source: 'billing_auto'
             });
-            if(!res.ok) throw new Error();
-        } catch {
-            // Save locally if cloud fails
-            const local = JSON.parse(localStorage.getItem('az_inventory') || '[]');
-            local.push(entry);
-            localStorage.setItem('az_inventory', JSON.stringify(local));
+            persistAllToSQLite(false);
         }
-
-        document.getElementById('matName').value = '';
-        document.getElementById('matQty').value = '';
-        fetchCloudData();
     }
 
-    async function saveProduction() {
-        const shots = parseInt(document.getElementById('prodShots').value);
-        if(isNaN(shots)) { alert('Please enter valid shots'); return; }
-        const entry = { machine: document.getElementById('prodMachine').value, shots: shots, user_name: activeUser };
+    function addCard() {
+        itemsData.push({ color: "NEW", qty: 0, bags: 0, gross: 0, net: 0 });
+        renderCards();
+        persistAllToSQLite(true);
+    }
 
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/production_logs`, {
-                method: 'POST',
-                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                body: JSON.stringify(entry)
+    function removeCard(idx) {
+        if(confirm("DELETE THIS COLOR CARD?")) {
+            itemsData.splice(idx, 1);
+            renderCards();
+            persistAllToSQLite(true);
+        }
+    }
+
+    function calculateBilling() {
+        let tQty = 0, tGross = 0, tNet = 0;
+        itemsData.forEach(i => {
+            tQty += (i && i.qty !== undefined && !isNaN(i.qty)) ? Number(i.qty) : 0;
+            tGross += (i && i.gross !== undefined && !isNaN(i.gross)) ? Number(i.gross) : 0;
+            tNet += (i && i.net !== undefined && !isNaN(i.net)) ? Number(i.net) : 0;
+        });
+
+        let mouldCavityElem = document.getElementById('mouldCavity');
+        let cycleTimeElem = document.getElementById('cycleTime');
+        let rateTypeElem = document.getElementById('rateType');
+        let rateValueElem = document.getElementById('rateValue');
+        let labourRateElem = document.getElementById('labourRate');
+        let extraOverheadElem = document.getElementById('extraOverhead');
+
+        let cavity = specs.mouldCavity !== undefined ? Number(specs.mouldCavity) : ((mouldCavityElem && !isNaN(mouldCavityElem.value) && mouldCavityElem.value !== "") ? Number(mouldCavityElem.value) : 1);
+        let cycle = specs.cycleTime !== undefined ? Number(specs.cycleTime) : ((cycleTimeElem && !isNaN(cycleTimeElem.value) && cycleTimeElem.value !== "") ? Number(cycleTimeElem.value) : 0);
+        let rateType = specs.rateType || (rateTypeElem ? rateTypeElem.value : 'hourly');
+        let rateVal = specs.rateValue !== undefined ? Number(specs.rateValue) : ((rateValueElem && !isNaN(rateValueElem.value) && rateValueElem.value !== "") ? Number(rateValueElem.value) : 0);
+        
+        let rawLabourRate = labourRateElem ? labourRateElem.value : undefined;
+        let labourRatePerPc = (rawLabourRate !== undefined && !isNaN(rawLabourRate) && rawLabourRate !== "") ? Number(rawLabourRate) : 2.30;
+        
+        let totalLabourCost = tQty * labourRatePerPc;
+        let overhead = specs.extraOverhead !== undefined ? Number(specs.extraOverhead) : ((extraOverheadElem && !isNaN(extraOverheadElem.value) && extraOverheadElem.value !== "") ? Number(extraOverheadElem.value) : 0);
+
+        let hours = cavity > 0 ? (tQty * cycle) / (cavity * 3600) : 0;
+        let amount = 0;
+        if(rateType === 'hourly') {
+            amount = rateVal * hours;
+        } else if(rateType === 'weight') {
+            amount = tNet * rateVal;
+        } else {
+            amount = rateVal;
+        }
+        let totalBillingAmount = amount + overhead;
+        let netMargin = totalBillingAmount - totalLabourCost;
+
+        let totalQtyElem = document.getElementById('totalQty');
+        let totalGrossElem = document.getElementById('totalGross');
+        let totalNetElem = document.getElementById('totalNet');
+        let totalHoursElem = document.getElementById('totalHours');
+        let totalAmountElem = document.getElementById('totalAmount');
+        let summaryLabourLabelElem = document.getElementById('summaryLabourLabel');
+        let summaryLabourValElem = document.getElementById('summaryLabourVal');
+        let netMarginValElem = document.getElementById('netMarginVal');
+
+        if(totalQtyElem) totalQtyElem.innerText = tQty.toLocaleString() + ' PCS';
+        if(totalGrossElem) totalGrossElem.innerText = tGross + ' KG';
+        if(totalNetElem) totalNetElem.innerText = tNet + ' KG';
+        if(totalHoursElem) totalHoursElem.innerText = hours + ' HRS';
+        if(totalAmountElem) totalAmountElem.innerText = totalBillingAmount.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        
+        if(summaryLabourLabelElem) summaryLabourLabelElem.innerText = `TOTAL LABOUR COST (${tQty.toLocaleString()} PCS)`;
+        if(summaryLabourValElem) summaryLabourValElem.innerText = totalLabourCost.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        if(netMarginValElem) netMarginValElem.innerText = netMargin.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        
+        window.currentCalculatedAmount = totalBillingAmount;
+        window.currentCalculatedLabour = totalLabourCost;
+    }
+
+    function saveToReceivables() {
+        let slip = specs.slipNo || 'N/A';
+        let key = "BILLING_" + slip;
+        if(postedSlips[key]) {
+            alert("THIS BILLING SLIP HAS ALREADY BEEN POSTED TO THE LEDGER!");
+            checkBillingPostedStatus();
+            return;
+        }
+
+        let item = specs.itemName || 'N/A';
+        let date = specs.startDate || new Date().toISOString().split('T')[0];
+        let amount = window.currentCalculatedAmount !== undefined ? window.currentCalculatedAmount : 0;
+        let labourCost = window.currentCalculatedLabour !== undefined ? window.currentCalculatedLabour : 0;
+
+        if(amount <= 0) {
+            alert("AMOUNT IS ZERO, CANNOT SAVE TO LEDGER!");
+            return;
+        }
+
+        receivablesData.push({
+            date: date,
+            slipNo: slip,
+            item: "BILLING: " + item,
+            debit: amount,
+            credit: 0,
+            _refKey: key
+        });
+
+        if(labourCost > 0) {
+            receivablesData.push({
+                date: date,
+                slipNo: slip + "-LAB",
+                item: "LABOUR COST: " + item,
+                debit: 0,
+                credit: labourCost,
+                _refKey: key
             });
-        } catch {
-            const local = JSON.parse(localStorage.getItem('az_production') || '[]');
-            local.push(entry);
-            localStorage.setItem('az_production', JSON.stringify(local));
         }
-        document.getElementById('prodShots').value = '';
-        fetchCloudData();
+
+        postedSlips[key] = true;
+        persistAllToSQLite(true);
+        checkBillingPostedStatus();
+        renderReceivables();
+        alert("SUCCESSFULLY SAVED BILLING & LABOUR COST TO MASTER LEDGER!");
     }
 
-    async function saveLedger() {
-        const desc = document.getElementById('ledgerDesc').value;
-        const amount = parseFloat(document.getElementById('ledgerAmount').value);
-        if(!desc || isNaN(amount)) { alert('Please enter valid details'); return; }
-        const entry = { description: desc, amount: amount, user_name: activeUser };
+    function recallSlipData() {
+        let recallSlipInputElem = document.getElementById('recallSlipInput');
+        if(!recallSlipInputElem) return;
+        let slipNum = recallSlipInputElem.value.trim().toUpperCase();
+        if (!slipNum) { alert("PLEASE ENTER A SLIP NUMBER TO RECALL!"); return; }
 
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/ledger`, {
-                method: 'POST',
-                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                body: JSON.stringify(entry)
-            });
-        } catch {
-            const local = JSON.parse(localStorage.getItem('az_ledger') || '[]');
-            local.push(entry);
-            localStorage.setItem('az_ledger', JSON.stringify(local));
+        let savedRecord = billingHistory[slipNum];
+        if (!savedRecord && specs.slipNo !== slipNum) { alert("SLIP NUMBER NOT FOUND IN HISTORY!"); return; }
+
+        let dataToLoad = savedRecord || { specs: specs, items: itemsData };
+
+        let s = dataToLoad.specs || {};
+        let setVal = (id, val) => { let el = document.getElementById(id); if(el) el.value = val; };
+
+        setVal('slipNo', s.slipNo || slipNum);
+        setVal('itemName', s.itemName || '');
+        setVal('materialType', s.materialType || '');
+        setVal('machineNo', s.machineNo || '');
+        setVal('cycleTime', s.cycleTime !== undefined ? s.cycleTime : 20);
+        setVal('mouldCavity', s.mouldCavity !== undefined ? s.mouldCavity : 2);
+        setVal('rateType', s.rateType || 'hourly');
+        setVal('rateValue', s.rateValue !== undefined ? s.rateValue : 1000);
+        setVal('labourRate', s.labourRate !== undefined ? s.labourRate : 2.30);
+        setVal('extraOverhead', s.extraOverhead !== undefined ? s.extraOverhead : 0);
+        setVal('startDate', s.startDate || new Date().toISOString().split('T')[0]);
+
+        if (dataToLoad.items && dataToLoad.items.length > 0) {
+            itemsData = JSON.parse(JSON.stringify(dataToLoad.items));
         }
-        document.getElementById('ledgerDesc').value = '';
-        document.getElementById('ledgerAmount').value = '';
-        fetchCloudData();
+
+        saveSpecs();
+        renderCards();
+        checkBillingPostedStatus();
+        alert(`SLIP #${slipNum} SUCCESSFULLY RECALLED!`);
     }
 
-    fetchCloudData();
-</script>
+    function updateRecalledSlip() {
+        let slipInputElem = document.getElementById('slipNo');
+        let slip = slipInputElem ? slipInputElem.value.toUpperCase() : '';
+        if(!slip) { alert("INVALID SLIP NUMBER!"); return; }
 
-</body>
+        let getVal = (id) => { let el = document.getElementById(id); return el ? el.value : ''; };
+        let getNum = (id, def) => { let el = document.getElementById(id); return (el && !isNaN(el.value) && el.value !== "") ? Number(el.value) : def; };
+
+        billingHistory[slip] = {
+            specs: {
+                slipNo: slip,
+                itemName: getVal('itemName').toUpperCase(),
+                materialType: getVal('materialType').toUpperCase(),
+                machineNo: getVal('machineNo').toUpperCase(),
+                cycleTime: getNum('cycleTime', 0),
+                mouldCavity: getNum('mouldCavity', 1),
+                rateType: getVal('rateType'),
+                rateValue: getNum('rateValue', 0),
+                labourRate: getNum('labourRate', 0),
+                extraOverhead: getNum('extraOverhead', 0),
+                startDate: getVal('startDate')
+            },
+            items: itemsData
+        };
+
+        persistAllToSQLite(true);
+        saveSpecs();
+        alert(`SLIP #${slip} DATA SUCCESSFULLY UPDATED & SAVED!`);
+    }
+
+    function renderExpensesCards() {
+        let c = document.getElementById('expensesCardsContainer');
+        if(!c) return;
+        c.innerHTML = "";
+        let totalExp = 0;
+        expensesData.forEach((exp, idx) => {
+            let expAmt = (exp && exp.amount !== undefined && !isNaN(exp.amount)) ? Number(exp.amount) : 0;
+            let expDesc = (exp && exp.description) ? exp.description : '';
+            totalExp += expAmt;
+            c.innerHTML += `
+                <div class="item-card">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:4px;">
+                        <span>EXPENSE ENTRY #${idx+1}</span>
+                        <button class="remove-btn no-print" onclick="removeExpenseRow(${idx})">DELETE</button>
+                    </div>
+                    <div class="card-grid" style="grid-template-columns: 2fr 1fr;">
+                        <div class="input-group"><label>DESCRIPTION</label><input type="text" class="e-desc" value="${expDesc}" oninput="updateExpensesData()"></div>
+                        <div class="input-group"><label>AMOUNT (PKR)</label><input type="number" class="e-amt" value="${expAmt}" step="any" oninput="updateExpensesData()"></div>
+                    </div>
+                </div>
+            `;
+        });
+        let totalExpensesAmountElem = document.getElementById('totalExpensesAmount');
+        if(totalExpensesAmountElem) {
+            totalExpensesAmountElem.innerText = totalExp.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        }
+        checkExpensesPostedStatus();
+        setupInputAutoSelect();
+    }
+
+    function updateExpensesData() {
+        let cards = document.querySelectorAll('#expensesCardsContainer .item-card');
+        cards.forEach((card, idx) => {
+            if(expensesData[idx]) {
+                let eDesc = card.querySelector('.e-desc');
+                let eAmt = card.querySelector('.e-amt');
+                expensesData[idx].description = eDesc ? eDesc.value.toUpperCase() : '';
+                expensesData[idx].amount = (eAmt && !isNaN(eAmt.value) && eAmt.value !== "") ? Number(eAmt.value) : 0;
+            }
+        });
+        triggerAutoSave();
+        let totalExp = 0;
+        expensesData.forEach(e => {
+            if(e && e.amount !== undefined && !isNaN(e.amount)) totalExp += Number(e.amount);
+        });
+        let totalExpensesAmountElem = document.getElementById('totalExpensesAmount');
+        if(totalExpensesAmountElem) {
+            totalExpensesAmountElem.innerText = totalExp.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        }
+        checkExpensesPostedStatus();
+    }
+
+    function addExpenseRow() {
+        expensesData.push({ description: "NEW EXPENSE", amount: 0 });
+        renderExpensesCards();
+        persistAllToSQLite(true);
+    }
+
+    function removeExpenseRow(idx) {
+        if(confirm("DELETE THIS EXPENSE ENTRY?")) {
+            expensesData.splice(idx, 1);
+            renderExpensesCards();
+            persistAllToSQLite(true);
+        }
+    }
+
+    function saveExpensesToLedger() {
+        let expenseDateElem = document.getElementById('expenseDate');
+        let date = (expenseDateElem && expenseDateElem.value) ? expenseDateElem.value : new Date().toISOString().split('T')[0];
+        let key = "EXPENSES_" + date;
+        if(postedSlips[key]) { alert("EXPENSES FOR THIS DATE ALREADY POSTED!"); checkExpensesPostedStatus(); return; }
+
+        let addedCount = 0;
+        expensesData.forEach(exp => {
+            let amt = (exp && exp.amount !== undefined && !isNaN(exp.amount)) ? Number(exp.amount) : 0;
+            if(amt > 0) {
+                receivablesData.push({
+                    date: date,
+                    slipNo: "EXP",
+                    item: "EXPENSE: " + (exp.description || ''),
+                    debit: 0,
+                    credit: amt,
+                    _refKey: key
+                });
+                addedCount++;
+            }
+        });
+        if(addedCount > 0) {
+            postedSlips[key] = true;
+            persistAllToSQLite(true);
+            checkExpensesPostedStatus();
+            renderReceivables();
+            alert(`SUCCESSFULLY SAVED ${addedCount} EXPENSE(S)!`);
+        }
+    }
+
+    function saveElectricityAndRentToLedger() {
+        let prodDateElem = document.getElementById('prod-report-date');
+        let date = (prodDateElem && prodDateElem.value) ? prodDateElem.value : (specs.startDate || new Date().toISOString().split('T')[0]);
+        let key = "ELEC_RENT_" + date;
+        if(postedSlips[key]) { alert("ELEC, RENT & SALARY ALREADY POSTED!"); checkElecRentPostedStatus(); return; }
+
+        let getNum = (id) => { let el = document.getElementById(id); return (el && !isNaN(el.value) && el.value !== "") ? Number(el.value) : 0; };
+        let prev = getNum('prevElecReading');
+        let curr = getNum('currElecReading');
+        let rate = getNum('elecRatePerUnit');
+        let rent = getNum('perDayRentCost');
+        let salary = getNum('monthlyFixedSalary');
+        let salaryPerDay = salary / 30;
+
+        let units = curr >= prev ? curr - prev : 0;
+        let elecTotal = units * rate;
+
+        let added = 0;
+        if(elecTotal > 0) {
+            receivablesData.push({ date: date, slipNo: "ELEC", item: `ELECTRICITY (${units} UNITS)`, debit: 0, credit: elecTotal, _refKey: key });
+            added++;
+        }
+        if(rent > 0) {
+            receivablesData.push({ date: date, slipNo: "RENT", item: "PER DAY RENT COST", debit: 0, credit: rent, _refKey: key });
+            added++;
+        }
+        if(salaryPerDay > 0) {
+            receivablesData.push({ date: date, slipNo: "SALARY", item: `FIXED SALARY / 30`, debit: 0, credit: salaryPerDay, _refKey: key });
+            added++;
+        }
+
+        if(added > 0) {
+            postedSlips[key] = true;
+            persistAllToSQLite(true);
+            checkElecRentPostedStatus();
+            renderReceivables();
+            alert("SUCCESSFULLY SAVED ELEC, RENT & SALARY TO LEDGER!");
+        }
+    }
+
+    function updateCreditDropdown() {
+        let selectEl = document.getElementById('creditDropdown');
+        if(!selectEl) return;
+        selectEl.innerHTML = '<option value="">-- SELECT CREDIT ENTRY --</option>';
+
+        receivablesData.forEach((rec, index) => {
+            let creditVal = (rec && rec.credit !== undefined && !isNaN(rec.credit)) ? Number(rec.credit) : 0;
+            if(creditVal > 0) {
+                let opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `[${rec.date || ''}] Slip: ${rec.slipNo || ''} - ${rec.item || ''} (Credit: ${creditVal.toLocaleString()})`;
+                selectEl.appendChild(opt);
+            }
+        });
+    }
+
+    function onCreditSelected() {
+        let selectEl = document.getElementById('creditDropdown');
+        let amtInput = document.getElementById('paymentAmount');
+        if(!selectEl || !amtInput) return;
+        let idx = selectEl.value;
+        if(idx !== "" && receivablesData[idx]) {
+            amtInput.value = (receivablesData[idx].credit !== undefined && !isNaN(receivablesData[idx].credit)) ? Number(receivablesData[idx].credit) : 0;
+        } else {
+            amtInput.value = "";
+        }
+    }
+
+    function makePaymentAgainstCredit() {
+        let selectEl = document.getElementById('creditDropdown');
+        let paymentDateElem = document.getElementById('paymentDate');
+        let paymentAmountElem = document.getElementById('paymentAmount');
+        if(!selectEl || !paymentDateElem || !paymentAmountElem) return;
+
+        let idx = selectEl.value;
+        let payDate = paymentDateElem.value || new Date().toISOString().split('T')[0];
+        let payAmt = (paymentAmountElem.value !== "" && !isNaN(paymentAmountElem.value)) ? Number(paymentAmountElem.value) : 0;
+
+        if(idx === "" || !receivablesData[idx]) { alert("PLEASE SELECT A CREDIT ENTRY!"); return; }
+        if(payAmt <= 0) { alert("PLEASE ENTER A VALID AMOUNT!"); return; }
+
+        let refCredit = receivablesData[idx];
+        receivablesData.push({
+            date: payDate,
+            slipNo: "PAY-" + ((refCredit && refCredit.slipNo) ? refCredit.slipNo : "GEN"),
+            item: "PAYMENT AGAINST: " + ((refCredit && refCredit.item) ? refCredit.item : ''),
+            debit: payAmt,
+            credit: 0,
+            _refKey: "PAY_" + Date.now()
+        });
+
+        persistAllToSQLite(true);
+        renderReceivables();
+        alert("PAYMENT RECORDED SUCCESSFULLY!");
+        selectEl.value = "";
+        paymentAmountElem.value = "";
+    }
+
+    function renderReceivables() {
+        let tbody = document.getElementById('receivablesTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = "";
+        let totalDebit = 0, totalCredit = 0;
+
+        receivablesData.forEach((rec, idx) => {
+            let debit = (rec && rec.debit !== undefined && !isNaN(rec.debit)) ? Number(rec.debit) : 0;
+            let credit = (rec && rec.credit !== undefined && !isNaN(rec.credit)) ? Number(rec.credit) : 0;
+            totalDebit += debit;
+            totalCredit += credit;
+
+            let recDate = (rec && rec.date) ? rec.date : '';
+            let recSlip = (rec && rec.slipNo) ? rec.slipNo : '';
+            let recItem = (rec && rec.item) ? rec.item : '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${recDate}</strong></td>
+                    <td>${recSlip}</td>
+                    <td style="text-align:left;">${recItem}</td>
+                    <td style="color:var(--success-color); font-weight:600;">${debit > 0 ? debit.toLocaleString('en-US', {minimumFractionDigits: 2}) : '-'}</td>
+                    <td style="color:var(--danger-color); font-weight:600;">${credit > 0 ? credit.toLocaleString('en-US', {minimumFractionDigits: 2}) : '-'}</td>
+                    <td class="no-print">
+                        <div style="display:flex; gap:4px; justify-content:center;">
+                            <button class="edit-btn" onclick="editReceivable(${idx})">EDIT</button>
+                            <button class="remove-btn" onclick="deleteReceivable(${idx})">DEL</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        let totalDebitValElem = document.getElementById('totalDebitVal');
+        let totalCreditValElem = document.getElementById('totalCreditVal');
+        let totalReceivablesAmountElem = document.getElementById('totalReceivablesAmount');
+
+        if(totalDebitValElem) totalDebitValElem.innerText = totalDebit.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        if(totalCreditValElem) totalCreditValElem.innerText = totalCredit.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        if(totalReceivablesAmountElem) totalReceivablesAmountElem.innerText = (totalDebit - totalCredit).toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        
+        updateCreditDropdown();
+        setupInputAutoSelect();
+    }
+
+    function editReceivable(idx) {
+        let rec = receivablesData[idx];
+        if(!rec) return;
+        let newDate = prompt("DATE:", rec.date || '');
+        if(newDate === null) return;
+        let newSlip = prompt("SLIP / REF #:", rec.slipNo || '');
+        if(newSlip === null) return;
+        let newItem = prompt("ITEM:", rec.item || '');
+        if(newItem === null) return;
+        let newDebitPrompt = prompt("DEBIT:", rec.debit !== undefined ? rec.debit : 0);
+        let newCreditPrompt = prompt("CREDIT:", rec.credit !== undefined ? rec.credit : 0);
+
+        let newDebit = (newDebitPrompt !== null && !isNaN(newDebitPrompt) && newDebitPrompt !== "") ? Number(newDebitPrompt) : 0;
+        let newCredit = (newCreditPrompt !== null && !isNaN(newCreditPrompt) && newCreditPrompt !== "") ? Number(newCreditPrompt) : 0;
+
+        receivablesData[idx] = { ...rec, date: newDate, slipNo: newSlip.toUpperCase(), item: newItem.toUpperCase(), debit: newDebit, credit: newCredit };
+        persistAllToSQLite(true);
+        renderReceivables();
+    }
+
+    function deleteReceivable(idx) {
+        if(confirm("DELETE LEDGER ENTRY?")) {
+            let removed = receivablesData.splice(idx, 1)[0];
+            if(removed && removed._refKey) delete postedSlips[removed._refKey];
+            persistAllToSQLite(true);
+            renderReceivables();
+            checkElecRentPostedStatus();
+            checkExpensesPostedStatus();
+        }
+    }
+
+    function addNewProdEntry() {
+        let prodReportDateElem = document.getElementById('prod-report-date');
+        let prodShiftElem = document.getElementById('prodShift');
+        let prodMachineNoElem = document.getElementById('prodMachineNo');
+        let prodOperatorElem = document.getElementById('prodOperator');
+        let prodShotsElem = document.getElementById('prodShots');
+        let prodSecPerShotElem = document.getElementById('prodSecPerShot');
+        let prodRatePerHourElem = document.getElementById('prodRatePerHour');
+
+        let date = (prodReportDateElem && prodReportDateElem.value) ? prodReportDateElem.value : new Date().toISOString().split('T')[0];
+        let shift = prodShiftElem ? prodShiftElem.value : '24 Hours';
+        let machineNo = prodMachineNoElem ? prodMachineNoElem.value.trim().toUpperCase() : '';
+        let operator = prodOperatorElem ? prodOperatorElem.value.trim().toUpperCase() : '';
+        let shots = (prodShotsElem && !isNaN(prodShotsElem.value) && prodShotsElem.value !== "") ? Number(prodShotsElem.value) : 0;
+        let secPerShot = (prodSecPerShotElem && !isNaN(prodSecPerShotElem.value) && prodSecPerShotElem.value !== "") ? Number(prodSecPerShotElem.value) : 0;
+        let ratePerHour = (prodRatePerHourElem && !isNaN(prodRatePerHourElem.value) && prodRatePerHourElem.value !== "") ? Number(prodRatePerHourElem.value) : 0;
+
+        if (!machineNo) {
+            alert("PLEASE ENTER A MACHINE NUMBER!");
+            return;
+        }
+
+        prodData.push({
+            date: date,
+            shift: shift,
+            machineNo: machineNo,
+            operator: operator || 'N/A',
+            shots: shots,
+            secPerShot: secPerShot,
+            ratePerHour: ratePerHour
+        });
+
+        persistAllToSQLite(true);
+        renderProdCards();
+
+        if(prodMachineNoElem) prodMachineNoElem.value = '';
+        if(prodOperatorElem) prodOperatorElem.value = '';
+        if(prodShotsElem) prodShotsElem.value = '';
+        if(prodSecPerShotElem) prodSecPerShotElem.value = '';
+        if(prodRatePerHourElem) prodRatePerHourElem.value = '';
+    }
+
+    function removeProdRow(idx) {
+        if(confirm("DELETE THIS PRODUCTION RECORD?")) {
+            prodData.splice(idx, 1);
+            renderProdCards();
+            persistAllToSQLite(true);
+        }
+    }
+
+    function renderProdCards() {
+        let tbody = document.getElementById('prodTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = "";
+        
+        prodData.forEach((row, idx) => {
+            let shots = (row && row.shots !== undefined && !isNaN(row.shots)) ? Number(row.shots) : 0;
+            let sec = (row && row.secPerShot !== undefined && !isNaN(row.secPerShot)) ? Number(row.secPerShot) : 0;
+            let rate = (row && row.ratePerHour !== undefined && !isNaN(row.ratePerHour)) ? Number(row.ratePerHour) : 0;
+            
+            let earning = (rate / 60 / 60) * sec * shots;
+            
+            let rowDate = (row && row.date) ? row.date : '';
+            let rowShift = (row && row.shift) ? row.shift : '24 Hours';
+            let rowMachine = (row && row.machineNo) ? row.machineNo : '';
+            let rowOperator = (row && row.operator) ? row.operator : 'N/A';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>#${idx+1}</strong></td>
+                    <td>${rowDate}</td>
+                    <td>${rowShift}</td>
+                    <td><strong>${rowMachine}</strong></td>
+                    <td>${rowOperator}</td>
+                    <td>${shots.toLocaleString()}</td>
+                    <td>${sec}</td>
+                    <td>${rate.toLocaleString()}</td>
+                    <td style="color:var(--success-color); font-weight:bold;">${earning.toLocaleString('en-US', {minimumFractionDigits: 2})} PKR</td>
+                    <td class="no-print">
+                        <button class="remove-btn" onclick="removeProdRow(${idx})">DEL</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        if(prodData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" style="color:#64748b;">NO PRODUCTION ENTRIES ADDED YET</td></tr>`;
+        }
+
+        calculateMachineSummary();
+        setupInputAutoSelect();
+    }
+
+    function calculateMachineSummary() {
+        let getNum = (id) => { let el = document.getElementById(id); return (el && !isNaN(el.value) && el.value !== "") ? Number(el.value) : 0; };
+        let prev = getNum('prevElecReading');
+        let curr = getNum('currElecReading');
+        let rate = getNum('elecRatePerUnit');
+        let rent = getNum('perDayRentCost');
+        let salary = getNum('monthlyFixedSalary');
+        let salaryPerDay = salary / 30;
+
+        let diff = curr >= prev ? curr - prev : 0;
+        let elecPayable = diff * rate;
+
+        let totalShots = 0;
+        let totalMachineEarnings = 0;
+
+        prodData.forEach(row => {
+            let shots = (row && row.shots !== undefined && !isNaN(row.shots)) ? Number(row.shots) : 0;
+            let sec = (row && row.secPerShot !== undefined && !isNaN(row.secPerShot)) ? Number(row.secPerShot) : 0;
+            let hrRate = (row && row.ratePerHour !== undefined && !isNaN(row.ratePerHour)) ? Number(row.ratePerHour) : 0;
+            
+            totalShots += shots;
+            totalMachineEarnings += (hrRate / 60 / 60) * sec * shots;
+        });
+
+        let totalExpenses = elecPayable + rent + salaryPerDay;
+        let netProfit = totalMachineEarnings - totalExpenses;
+
+        let totalShotsSumElem = document.getElementById('totalShotsSum');
+        let totalPowerConsumedElem = document.getElementById('totalPowerConsumed');
+        let totalElecPayableValElem = document.getElementById('totalElecPayableVal');
+        let totalRentPayableValElem = document.getElementById('totalRentPayableVal');
+        let totalSalaryPayableValElem = document.getElementById('totalSalaryPayableVal');
+        let netProfitSummaryValElem = document.getElementById('netProfitSummaryVal');
+
+        if(totalShotsSumElem) totalShotsSumElem.innerText = totalShots.toLocaleString() + ' SHOTS';
+        if(totalPowerConsumedElem) totalPowerConsumedElem.innerText = diff + ' UNITS';
+        if(totalElecPayableValElem) totalElecPayableValElem.innerText = elecPayable.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        if(totalRentPayableValElem) totalRentPayableValElem.innerText = rent.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        if(totalSalaryPayableValElem) totalSalaryPayableValElem.innerText = salaryPerDay.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+        if(netProfitSummaryValElem) {
+            netProfitSummaryValElem.innerText = netProfit.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' PKR';
+            netProfitSummaryValElem.style.color = netProfit < 0 ? 'var(--danger-color)' : 'var(--success-color)';
+        }
+
+        let summaryContainer = document.getElementById('machineSummaryContainer');
+        if(!summaryContainer) return;
+        summaryContainer.innerHTML = `
+            <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 11px; font-weight: 600; color: #64748b;">TOTAL MACHINE EARNINGS:</span>
+                <span style="font-size: 14px; font-weight: bold; color: var(--success-color);">${totalMachineEarnings.toLocaleString('en-US', {minimumFractionDigits: 2})} PKR</span>
+            </div>
+        `;
+    }
+  </script>
+ </body>
 </html>
