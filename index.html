@@ -4,132 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AZ TOYS ENTERPRISE</title>
-    <!-- Supabase CDN -->
-    <script>
-    const SUPABASE_URL = 'https://qnorrqaufbusfnwapllk.supabase.co';
-    const SUPABASE_ANON_KEY = 'Sb_publishable_-Fjarq_4Qt4HTnDIvJ3M9w_p0nrHunt';
-    
-    const statusBadge = document.getElementById('syncStatus');
-    let activeUser = "MANAGER";
-
-    function switchTab(index) {
-        const tabs = document.querySelectorAll('.nav-tab');
-        const contents = document.querySelectorAll('.section-content');
-        tabs.forEach((t, i) => {
-            t.classList.toggle('active', i === index);
-            contents[i].classList.toggle('active', i === index);
-        });
-    }
-
-    async function fetchCloudData() {
-        statusBadge.innerText = "CONNECTING (REST)...";
-        statusBadge.className = "status-badge";
-
-        try {
-            // Using direct fetch API to bypass SDK locking
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory?select=*`, {
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const invData = await response.json();
-            
-            const invTable = document.getElementById('inventoryTable');
-            if (invData && invData.length > 0) {
-                invTable.innerHTML = invData.map(item => `<tr><td>${item.material_name}</td><td>${item.qty}</td><td>${item.updated_by}</td></tr>`).join('');
-            } else {
-                invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No records found. Add one below.</td></tr>`;
-            }
-
-            statusBadge.innerText = "✅ LIVE REST SYNCED";
-            statusBadge.className = "status-badge connected";
-        } catch (err) {
-            statusBadge.innerText = `❌ ${err.message}`;
-            statusBadge.className = "status-badge error";
-            console.error(err);
+    <style>
+        :root {
+            --primary: #1e293b;
+            --secondary: #0f172a;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #334155;
+            --border: #cbd5e1;
         }
-    }
-
-    async function saveInventory() {
-        const name = document.getElementById('matName').value;
-        const qty = parseFloat(document.getElementById('matQty').value);
-        if(!name || isNaN(qty)) { alert('Please enter valid details'); return; }
-
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ material_name: name, qty: qty, updated_by: activeUser })
-            });
-
-            if (!response.ok) throw new Error('Failed to save to cloud');
-
-            document.getElementById('matName').value = '';
-            document.getElementById('matQty').value = '';
-            fetchCloudData();
-        } catch (err) {
-            alert('Error: ' + err.message);
-        }
-    }
-
-    async function saveProduction() {
-        const shots = parseInt(document.getElementById('prodShots').value);
-        if(isNaN(shots)) { alert('Please enter valid shots'); return; }
-        
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/production_logs`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ machine: document.getElementById('prodMachine').value, shots: shots, user_name: activeUser })
-            });
-            document.getElementById('prodShots').value = '';
-            fetchCloudData();
-        } catch (err) {
-            alert('Error: ' + err.message);
-        }
-    }
-
-    async function saveLedger() {
-        const desc = document.getElementById('ledgerDesc').value;
-        const amount = parseFloat(document.getElementById('ledgerAmount').value);
-        if(!desc || isNaN(amount)) { alert('Please enter valid details'); return; }
-
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/ledger`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ description: desc, amount: amount, user_name: activeUser })
-            });
-            document.getElementById('ledgerDesc').value = '';
-            document.getElementById('ledgerAmount').value = '';
-            fetchCloudData();
-        } catch (err) {
-            alert('Error: ' + err.message);
-        }
-    }
-
-    // Run on load
-    fetchCloudData();
-</script>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 15px; }
+        .container { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .header-panel { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .status-badge { font-size: 12px; font-weight: bold; padding: 6px 12px; border-radius: 20px; background: #e2e8f0; color: #475569; display: inline-block; }
+        .status-badge.connected { background: #d1fae5; color: #065f46; }
+        .status-badge.error { background: #fee2e2; color: #991b1b; }
+        h1 { font-size: 22px; color: var(--primary); text-align: center; margin: 15px 0; }
+        .nav-tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
+        .nav-tab { background: #e2e8f0; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; }
+        .nav-tab.active { background: var(--primary); color: #fff; }
+        .section-content { display: none; }
+        .section-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+        th { background: var(--bg); color: var(--primary); }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 14px; }
+        .btn-refresh { background: #3b82f6; margin-bottom: 15px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+    </style>
 </head>
 <body>
 
@@ -269,25 +176,7 @@
     const SUPABASE_URL = 'https://qnorrqaufbusfnwapllk.supabase.co';
     const SUPABASE_ANON_KEY = 'Sb_publishable_-Fjarq_4Qt4HTnDIvJ3M9w_p0nrHunt';
     
-    let supabase = null;
     const statusBadge = document.getElementById('syncStatus');
-
-    window.onerror = function(msg, url, line) {
-        statusBadge.innerText = `❌ SCRIPT ERROR: ${msg} (Line ${line})`;
-        statusBadge.className = "status-badge error";
-    };
-
-    try {
-        if (window.supabase && window.supabase.createClient) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } else {
-            throw new Error("window.supabase is undefined. CDN blocked.");
-        }
-    } catch (e) {
-        statusBadge.innerText = `❌ INIT ERROR: ${e.message}`;
-        statusBadge.className = "status-badge error";
-    }
-
     let activeUser = "MANAGER";
 
     function switchTab(index) {
@@ -300,24 +189,20 @@
     }
 
     async function fetchCloudData() {
-        statusBadge.innerText = "CONNECTING...";
+        statusBadge.innerText = "CONNECTING (REST)...";
         statusBadge.className = "status-badge";
 
-        if (!supabase) {
-            statusBadge.innerText = "❌ ERROR: No Supabase Client";
-            statusBadge.className = "status-badge error";
-            return;
-        }
-
         try {
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Network Timeout (Supabase not responding)")), 5000)
-            );
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory?select=*`, {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                }
+            });
 
-            const fetchPromise = supabase.from('inventory').select('*');
-            const { data: invData, error: invError } = await Promise.race([fetchPromise, timeoutPromise]);
-
-            if (invError) throw invError;
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const invData = await response.json();
             
             const invTable = document.getElementById('inventoryTable');
             if (invData && invData.length > 0) {
@@ -326,22 +211,10 @@
                 invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No records found. Add one below.</td></tr>`;
             }
 
-            const { data: prodData } = await supabase.from('production_logs').select('*');
-            const prodTable = document.getElementById('productionTable');
-            if (prodData && prodData.length > 0) {
-                prodTable.innerHTML = prodData.map(item => `<tr><td>${item.machine}</td><td>${item.shots}</td><td>${item.user_name}</td></tr>`).join('');
-            }
-
-            const { data: ledgerData } = await supabase.from('ledger').select('*');
-            const ledgerTable = document.getElementById('ledgerTable');
-            if (ledgerData && ledgerData.length > 0) {
-                ledgerTable.innerHTML = ledgerData.map(item => `<tr><td>${item.description}</td><td>${item.amount}</td><td>${item.user_name}</td></tr>`).join('');
-            }
-
-            statusBadge.innerText = "✅ LIVE CLOUD SYNCED";
+            statusBadge.innerText = "✅ LIVE REST SYNCED";
             statusBadge.className = "status-badge connected";
         } catch (err) {
-            statusBadge.innerText = `❌ ${err.message || err}`;
+            statusBadge.innerText = `❌ ${err.message}`;
             statusBadge.className = "status-badge error";
             console.error(err);
         }
@@ -352,27 +225,72 @@
         const qty = parseFloat(document.getElementById('matQty').value);
         if(!name || isNaN(qty)) { alert('Please enter valid details'); return; }
 
-        const { error } = await supabase.from('inventory').insert([{ material_name: name, qty: qty, updated_by: activeUser }]);
-        if(error) { alert('Error: ' + error.message); } else {
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/inventory`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ material_name: name, qty: qty, updated_by: activeUser })
+            });
+
+            if (!response.ok) throw new Error('Failed to save to cloud');
+
             document.getElementById('matName').value = '';
             document.getElementById('matQty').value = '';
             fetchCloudData();
+        } catch (err) {
+            alert('Error: ' + err.message);
         }
     }
 
     async function saveProduction() {
         const shots = parseInt(document.getElementById('prodShots').value);
         if(isNaN(shots)) { alert('Please enter valid shots'); return; }
-        const { error } = await supabase.from('production_logs').insert([{ machine: document.getElementById('prodMachine').value, shots: shots, user_name: activeUser }]);
-        if(error) alert('Error: ' + error.message); else { document.getElementById('prodShots').value = ''; fetchCloudData(); }
+        
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/production_logs`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ machine: document.getElementById('prodMachine').value, shots: shots, user_name: activeUser })
+            });
+            document.getElementById('prodShots').value = '';
+            fetchCloudData();
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
     }
 
     async function saveLedger() {
         const desc = document.getElementById('ledgerDesc').value;
         const amount = parseFloat(document.getElementById('ledgerAmount').value);
         if(!desc || isNaN(amount)) { alert('Please enter valid details'); return; }
-        const { error } = await supabase.from('ledger').insert([{ description: desc, amount: amount, user_name: activeUser }]);
-        if(error) alert('Error: ' + error.message); else { document.getElementById('ledgerDesc').value = ''; document.getElementById('ledgerAmount').value = ''; fetchCloudData(); }
+
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/ledger`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ description: desc, amount: amount, user_name: activeUser })
+            });
+            document.getElementById('ledgerDesc').value = '';
+            document.getElementById('ledgerAmount').value = '';
+            fetchCloudData();
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
     }
 
     fetchCloudData();
