@@ -1,1 +1,416 @@
 
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2c3e50">
+  <title>AZ TOYS - FULL ENTERPRISE CLOUD SYSTEM</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+        :root { 
+            --primary-color: #2c3e50; 
+            --secondary-color: #3498db; 
+            --success-color: #27ae60; 
+            --warning-color: #e67e22; 
+            --danger-color: #e74c3c; 
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: #f1f5f9; 
+            color: #334155; 
+            margin: 0; 
+            padding: 10px; 
+            text-transform: uppercase; 
+            font-size: 12px;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 16px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+        }
+        .nav-tabs { 
+            display: flex; 
+            background: #e2e8f0; 
+            border-radius: 8px; 
+            padding: 4px; 
+            margin-bottom: 14px; 
+            gap: 2px; 
+            overflow-x: auto;
+        }
+        .nav-tab { 
+            flex: 1; 
+            padding: 8px 6px; 
+            text-align: center; 
+            background: transparent; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            font-size: 10px; 
+            color: #475569; 
+            cursor: pointer; 
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+        .nav-tab.active { 
+            background: white; 
+            color: var(--primary-color); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
+        .user-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            margin-bottom: 12px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        h2 { 
+            color: var(--primary-color); 
+            text-align: center; 
+            margin: 8px 0 4px 0; 
+            font-size: 18px; 
+        }
+        .section-title { 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: var(--primary-color); 
+            margin-top: 12px; 
+            margin-bottom: 8px; 
+            border-bottom: 2px solid var(--secondary-color); 
+            padding-bottom: 4px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 8px; 
+            margin-bottom: 10px; 
+        }
+        .input-group { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        label { 
+            font-size: 11px; 
+            font-weight: 600; 
+            margin-bottom: 2px; 
+            color: #475569; 
+        }
+        input, select, textarea { 
+            padding: 8px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            background: #fff; 
+            text-transform: uppercase; 
+            font-family: inherit;
+        }
+        .table-container { 
+            overflow-x: auto; 
+            margin-bottom: 10px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 11px; 
+        }
+        th, td { 
+            border: 1px solid #cbd5e1; 
+            padding: 6px; 
+            text-align: center; 
+            vertical-align: middle;
+        }
+        th { 
+            background-color: var(--primary-color); 
+            color: white; 
+            font-weight: 500; 
+        }
+        .btn-container { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: flex-end; 
+            margin-top: 10px; 
+            flex-wrap: wrap;
+        }
+        button { 
+            background-color: var(--secondary-color); 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+        }
+        button.btn-success { background-color: var(--success-color); }
+        button.btn-warning { background-color: var(--warning-color); }
+        button.btn-danger { background-color: var(--danger-color); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+  </style>
+ </head>
+ <body>
+  <div class="container">
+   <div class="user-bar">
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <span>👤 USER:</span>
+        <select id="activeUserSelect" onchange="switchUser(this.value)" style="padding: 4px; font-size: 11px; font-weight: bold; width: 120px;">
+            <option value="MANAGER">MANAGER</option>
+            <option value="STAFF_1">STAFF 1</option>
+            <option value="STAFF_2">STAFF 2</option>
+        </select>
+    </div>
+    <span id="syncStatus" style="color: var(--warning-color);">🔄 CONNECTING...</span>
+   </div>
+   <h2>AZ TOYS ENTERPRISE</h2>
+   
+   <!-- 5 Navigation Tabs -->
+   <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('inventory', this)">1. INVENTORY</button>
+    <button class="nav-tab" onclick="switchTab('production', this)">2. PRODUCTION</button>
+    <button class="nav-tab" onclick="switchTab('ledger', this)">3. LEDGER</button>
+    <button class="nav-tab" onclick="switchTab('dispatch', this)">4. DISPATCH</button>
+    <button class="nav-tab" onclick="switchTab('expenses', this)">5. EXPENSES</button>
+   </div>
+
+   <!-- PAGE 1: INVENTORY -->
+   <div id="tab-inventory" class="tab-content active">
+    <div class="section-title">
+     <span>RAW MATERIAL STOCK</span>
+     <button type="button" class="btn-success" onclick="addNewMaterial()">+ ADD MATERIAL</button>
+    </div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>MATERIAL</th>
+        <th>QTY (KG)</th>
+        <th>UPDATED BY</th>
+       </tr>
+      </thead>
+      <tbody id="cloudInventoryBody"></tbody>
+     </table>
+    </div>
+    <div class="btn-container"><button onclick="fetchCloudData()">🔄 REFRESH DATA</button></div>
+   </div>
+
+   <!-- PAGE 2: PRODUCTION -->
+   <div id="tab-production" class="tab-content">
+    <div class="section-title"><span>SHIFT PRODUCTION LOG</span></div>
+    <div class="form-grid">
+     <div class="input-group"><label>MACHINE</label><input type="text" id="pMachine" value="M-06"></div>
+     <div class="input-group"><label>SHOTS</label><input type="number" id="pShots" value="1000"></div>
+    </div>
+    <button class="btn-success" onclick="addProductionRecord()">+ SUBMIT PRODUCTION LOG</button>
+    <div class="table-container" style="margin-top: 10px;">
+     <table>
+      <thead>
+       <tr>
+        <th>USER</th>
+        <th>MACHINE</th>
+        <th>SHOTS</th>
+        <th>TIME</th>
+       </tr>
+      </thead>
+      <tbody id="cloudProdBody"></tbody>
+     </table>
+    </div>
+   </div>
+
+   <!-- PAGE 3: LEDGER -->
+   <div id="tab-ledger" class="tab-content">
+    <div class="section-title">
+     <span>TRANSACTION LEDGER</span>
+     <button type="button" class="btn-success" onclick="addLedgerEntry()">+ ADD ENTRY</button>
+    </div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>DATE</th>
+        <th>DESCRIPTION</th>
+        <th>USER</th>
+        <th>AMOUNT</th>
+       </tr>
+      </thead>
+      <tbody id="cloudLedgerBody"></tbody>
+     </table>
+    </div>
+   </div>
+
+   <!-- PAGE 4: DISPATCH / ORDERS -->
+   <div id="tab-dispatch" class="tab-content">
+    <div class="section-title">
+     <span>DISPATCH & SHIPMENTS</span>
+     <button type="button" class="btn-success" onclick="addDispatchEntry()">+ NEW DISPATCH</button>
+    </div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>CLIENT / DESTINATION</th>
+        <th>ITEMS / TOYS</th>
+        <th>BOXES</th>
+        <th>USER</th>
+       </tr>
+      </thead>
+      <tbody id="cloudDispatchBody">
+       <tr><td colspan="4">No dispatches logged yet.</td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+
+   <!-- PAGE 5: FACTORY EXPENSES -->
+   <div id="tab-expenses" class="tab-content">
+    <div class="section-title">
+     <span>DAILY EXPENSES</span>
+     <button type="button" class="btn-success" onclick="addExpenseEntry()">+ ADD EXPENSE</button>
+    </div>
+    <div class="table-container">
+     <table>
+      <thead>
+       <tr>
+        <th>PARTICULARS</th>
+        <th>AMOUNT (PKR)</th>
+        <th>LOGGED BY</th>
+       </tr>
+      </thead>
+      <tbody id="cloudExpenseBody">
+       <tr><td colspan="3">No expenses logged yet.</td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://qnorrqaufbusfnwapllk.supabase.co';
+    const SUPABASE_ANON_KEY = 'Sb_publishable_-Fjarq_4Qt4HTnDIvJ3M9w_p0nrHunt';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let activeUser = "MANAGER";
+    function switchUser(user) { activeUser = user; }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        btn.classList.add('active');
+        fetchCloudData();
+    }
+
+    async function fetchCloudData() {
+        document.getElementById('syncStatus').innerText = `🔄 SYNCING...`;
+        try {
+            // 1. Inventory
+            let { data: invData } = await supabase.from('inventory').select('*');
+            if (invData) {
+                let invBody = document.getElementById('cloudInventoryBody');
+                invBody.innerHTML = "";
+                invData.forEach(item => {
+                    invBody.innerHTML += `<tr><td><strong>${item.material_name}</strong></td><td>${item.qty} KG</td><td>${item.updated_by}</td></tr>`;
+                });
+            }
+
+            // 2. Production
+            let { data: prodData } = await supabase.from('production_logs').select('*').order('created_at', { ascending: false });
+            if (prodData) {
+                let prodBody = document.getElementById('cloudProdBody');
+                prodBody.innerHTML = "";
+                prodData.forEach(p => {
+                    let timeStr = new Date(p.created_at).toLocaleTimeString();
+                    prodBody.innerHTML += `<tr><td>${p.user_name}</td><td>${p.machine}</td><td>${p.shots}</td><td>${timeStr}</td></tr>`;
+                });
+            }
+
+            // 3. Ledger
+            let { data: ledgData } = await supabase.from('ledger').select('*').order('date', { ascending: false });
+            if (ledgData) {
+                let ledgBody = document.getElementById('cloudLedgerBody');
+                ledgBody.innerHTML = "";
+                ledgData.forEach(l => {
+                    ledgBody.innerHTML += `<tr><td>${l.date}</td><td>${l.description}</td><td>${l.user_name}</td><td>${l.amount}</td></tr>`;
+                });
+            }
+
+            document.getElementById('syncStatus').innerText = `✅ LIVE CLOUD SYNCED`;
+        } catch (err) {
+            document.getElementById('syncStatus').innerText = `❌ CONNECTION ERROR`;
+        }
+    }
+
+    async function addNewMaterial() {
+        let material_name = prompt("MATERIAL NAME:").trim().toUpperCase();
+        let qty = Number(prompt("INITIAL QTY (KG):", "100"));
+        if(material_name) {
+            const { error } = await supabase.from('inventory').insert([{ material_name, qty, updated_by: activeUser }]);
+            if(error) alert("Error: " + error.message);
+            else fetchCloudData();
+        }
+    }
+
+    async function addProductionRecord() {
+        let machine = document.getElementById('pMachine').value.toUpperCase();
+        let shots = Number(document.getElementById('pShots').value);
+        const { error } = await supabase.from('production_logs').insert([{ user_name: activeUser, machine, shots }]);
+        if(error) alert("Error: " + error.message);
+        else {
+            alert("Production log synced!");
+            fetchCloudData();
+        }
+    }
+
+    async function addLedgerEntry() {
+        let description = prompt("TRANSACTION DESCRIPTION:").trim().toUpperCase();
+        let amount = Number(prompt("AMOUNT (PKR):", "0"));
+        if(description) {
+            const { error } = await supabase.from('ledger').insert([{ description, amount, user_name: activeUser }]);
+            if(error) alert("Error: " + error.message);
+            else fetchCloudData();
+        }
+    }
+
+    function addDispatchEntry() {
+        let client = prompt("CLIENT / DESTINATION NAME:").trim().toUpperCase();
+        let items = prompt("ITEMS / TOYS DISPATCHED:").trim().toUpperCase();
+        let boxes = prompt("NUMBER OF BOXES:", "10");
+        if(client) {
+            let tbody = document.getElementById('cloudDispatchBody');
+            if(tbody.innerHTML.includes("No dispatches")) tbody.innerHTML = "";
+            tbody.innerHTML += `<tr><td><strong>${client}</strong></td><td>${items}</td><td>${boxes}</td><td>${activeUser}</td></tr>`;
+            alert("Dispatch logged locally!");
+        }
+    }
+
+    function addExpenseEntry() {
+        let particulars = prompt("EXPENSE PARTICULARS (e.g. TEA, FUEL):").trim().toUpperCase();
+        let amount = prompt("AMOUNT (PKR):", "500");
+        if(particulars) {
+            let tbody = document.getElementById('cloudExpenseBody');
+            if(tbody.innerHTML.includes("No expenses")) tbody.innerHTML = "";
+            tbody.innerHTML += `<tr><td><strong>${particulars}</strong></td><td>${amount}</td><td>${activeUser}</td></tr>`;
+            alert("Expense logged locally!");
+        }
+    }
+
+    window.onload = () => { fetchCloudData(); };
+  </script>
+ </body>
+</html>
