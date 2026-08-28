@@ -178,7 +178,20 @@
     const SUPABASE_URL = 'https://qnorrqaufbusfnwapllk.supabase.co';
     const SUPABASE_ANON_KEY = 'Sb_publishable_-Fjarq_4Qt4HTnDIvJ3M9w_p0nrHunt';
     
-    let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let supabase = null;
+    const statusBadge = document.getElementById('syncStatus');
+
+    try {
+        if (window.supabase && window.supabase.createClient) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            throw new Error("Supabase SDK failed to load from CDN");
+        }
+    } catch (e) {
+        statusBadge.innerText = `❌ SDK ERROR: ${e.message}`;
+        statusBadge.className = "status-badge error";
+    }
+
     let activeUser = "MANAGER";
 
     function switchTab(index) {
@@ -191,18 +204,17 @@
     }
 
     async function fetchCloudData() {
-        const statusBadge = document.getElementById('syncStatus');
         statusBadge.innerText = "CONNECTING...";
         statusBadge.className = "status-badge";
 
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Network Timeout / Connection Blocked")), 4000)
-        );
+        if (!supabase) {
+            statusBadge.innerText = "❌ ERROR: No Client";
+            statusBadge.className = "status-badge error";
+            return;
+        }
 
         try {
-            const fetchPromise = supabase.from('inventory').select('*');
-            const { data: invData, error: invError } = await Promise.race([fetchPromise, timeoutPromise]);
-            
+            const { data: invData, error: invError } = await supabase.from('inventory').select('*');
             if (invError) throw invError;
             
             const invTable = document.getElementById('inventoryTable');
@@ -227,7 +239,7 @@
             statusBadge.innerText = "✅ LIVE CLOUD SYNCED";
             statusBadge.className = "status-badge connected";
         } catch (err) {
-            statusBadge.innerText = `❌ ERROR: ${err.message}`;
+            statusBadge.innerText = `❌ ERROR: ${err.message || err}`;
             statusBadge.className = "status-badge error";
             console.error(err);
         }
