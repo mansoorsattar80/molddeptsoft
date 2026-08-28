@@ -7,6 +7,7 @@
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
             --primary: #1e293b;
             --secondary: #0f172a;
             --accent: #10b981;
@@ -194,7 +195,6 @@
         statusBadge.innerText = "CONNECTING...";
         statusBadge.className = "status-badge";
 
-        // Setup a 4-second timeout monitor to catch network stalls
         const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error("Network Timeout / Connection Blocked")), 4000)
         );
@@ -212,14 +212,12 @@
                 invTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">No records found. Add one below.</td></tr>`;
             }
 
-            // Fetch Production Logs
             const { data: prodData } = await supabase.from('production_logs').select('*');
             const prodTable = document.getElementById('productionTable');
             if (prodData && prodData.length > 0) {
                 prodTable.innerHTML = prodData.map(item => `<tr><td>${item.machine}</td><td>${item.shots}</td><td>${item.user_name}</td></tr>`).join('');
             }
 
-            // Fetch Ledger
             const { data: ledgerData } = await supabase.from('ledger').select('*');
             const ledgerTable = document.getElementById('ledgerTable');
             if (ledgerData && ledgerData.length > 0) {
@@ -263,7 +261,6 @@
         if(error) alert('Error: ' + error.message); else { document.getElementById('ledgerDesc').value = ''; document.getElementById('ledgerAmount').value = ''; fetchCloudData(); }
     }
 
-    // Run on load
     fetchCloudData();
 </script>
 
